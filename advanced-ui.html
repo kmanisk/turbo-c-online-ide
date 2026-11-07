@@ -1,0 +1,58 @@
+<aside class="drawer" id="advancedFilesDrawer" hidden role="dialog" aria-modal="true" aria-labelledby="advancedFilesTitle">
+  <div class="drawer-heading"><div><span class="eyebrow">FULL DOS / C:</span><h2 id="advancedFilesTitle">Drive explorer</h2></div><button type="button" class="icon-button close-drawer" data-close-drawer aria-label="Close file manager">×</button></div>
+  <div class="drawer-scroll">
+    <div class="drawer-section">
+      <div class="workspace-summary"><span id="advUsedSpace">Workspace: 0 B</span><span id="advStorageState" class="saved-indicator">Browser local</span></div>
+      <p>Saved locally, not synced. DOSBox sees new/renamed files reliably after restart. Upload software you have the right to use.</p>
+      <div class="drawer-actions"><button id="advSaveBtn" type="button">Save locally</button><button id="advResetBtn" class="danger-button" type="button">Reset workspace</button></div>
+    </div>
+    <div class="drawer-section">
+      <h3>Import your software</h3>
+      <div id="advDropzone" class="dos-dropzone" role="button" tabindex="0" aria-label="Select or drop files">Drop files, ZIP, JSDOS, ISO or IMG here<span>Click to browse · files stay in your browser</span></div>
+      <input id="advancedInput" type="file" multiple accept=".c,.cpp,.h,.hpp,.txt,.exe,.com,.bat,.zip,.jsdos,.iso,.img,.ima,.cue,.bin" hidden>
+      <label class="field-label" for="advTarget">ZIP / JSDOS extraction folder (under C:)</label>
+      <input id="advTarget" class="field-input" value="UPLOADS" spellcheck="false" maxlength="48">
+      <p>Default: C:\UPLOADS. ZIP/JSDOS packages are extracted as files using validated DOS 8.3 names. JSDOS import does not replace the current emulator boot configuration.</p>
+      <label class="field-label" for="advMountDrive">Image mount destination</label>
+      <select id="advMountDrive"><option value="D">D: CD-ROM (ISO)</option><option value="A">A: floppy (IMG/IMA)</option></select>
+      <p>Mounting requires restarting Full DOS. Plain ISO → D: and IMG/IMA → A: are supported. CUE/BIN auto-mount is not verified and is disabled; upload both only for manual handling.</p>
+      <div class="drawer-actions"><button id="advBrowseBtn" type="button">Choose files</button><button id="advMountBtn" type="button" disabled>Mount selected image</button></div>
+      <p id="advImportStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div class="drawer-section">
+      <div class="section-line"><h3>Filesystem tree</h3><button type="button" id="advRefreshBtn" class="text-button">Refresh</button></div>
+      <div id="advTree" class="dos-tree" role="tree" aria-label="Drive C files"><p class="muted">Start Full DOS to browse files.</p></div>
+      <p id="advSelectedPath" class="muted">No file selected</p>
+      <div class="drawer-actions">
+        <button id="advDownloadItem" type="button" disabled>Download</button>
+        <button id="advRenameItem" type="button" disabled>Rename</button>
+        <button id="advDeleteItem" type="button" class="danger-button" disabled>Delete</button>
+      </div>
+      <label class="field-label" for="advNewName">Filename or directory name</label>
+      <input id="advNewName" class="field-input" placeholder="NEWDIR or RENAME.EXE" maxlength="90" spellcheck="false">
+      <div class="drawer-actions"><button id="advMakeFolder" type="button">New folder (MD)</button><button id="advDownloadZip" type="button">Download folder ZIP</button></div>
+      <p>Creating a folder uses the DOS MD command at the prompt. Directory deletion/renaming is not provided by the js-dos filesystem API.</p>
+    </div>
+  </div>
+</aside>
+<aside class="drawer" id="settingsDrawer" hidden role="dialog" aria-modal="true" aria-labelledby="dosSettingsTitle">
+  <div class="drawer-heading"><div><span class="eyebrow">ADVANCED ONLY</span><h2 id="dosSettingsTitle">DOSBox settings</h2></div><button type="button" class="icon-button close-drawer" data-close-drawer aria-label="Close settings">×</button></div>
+  <div class="drawer-scroll"><div class="drawer-section">
+    <p>Settings apply on the next Full DOS restart. Incorrect configuration can prevent booting. Reset restores a working DOS prompt.</p>
+    <div class="settings-grid">
+      <label>CPU cycles<select id="advCycles"><option value="auto">Auto</option><option value="max">Maximum</option><option value="fixed">Fixed</option></select></label>
+      <label>Fixed cycles<input id="advFixedCycles" class="field-input" type="number" min="100" max="500000" step="100" value="10000"></label>
+      <label>Memory (MiB)<input id="advMemsize" class="field-input" type="number" min="4" max="64" step="4" value="32"></label>
+      <label>Machine<select id="advMachine"><option value="svga_s3">SVGA S3</option><option value="vgaonly">VGA only</option><option value="ega">EGA</option><option value="cga">CGA</option></select></label>
+      <label>Sound<select id="advSound"><option value="on">On</option><option value="off">Off</option></select></label>
+      <label>Keyboard layout<select id="advKeyboard"><option value="auto">Auto/US</option><option value="us">US</option><option value="uk">UK</option><option value="de">German</option></select></label>
+      <label>Mouse sensitivity<input id="advMouseSensitivity" class="field-input" type="number" min="20" max="200" value="100"></label>
+      <label>Render scaling<select id="advRender"><option value="fit">Fit 4:3</option><option value="pixel">Pixel-perfect</option></select></label>
+    </div>
+    <label class="field-label" for="advConfigEditor">Edit dosbox.conf</label>
+    <textarea id="advConfigEditor" rows="14" class="dos-config-editor" spellcheck="false"></textarea>
+    <p>Must contain [autoexec], mount c . and c:. No unsafe boot commands are loaded automatically.</p>
+    <div class="drawer-actions"><button id="advSaveSettings" type="button">Save</button><button id="advConfigReset" type="button">Reset defaults</button><button id="advApplySettings" type="button">Apply &amp; restart</button></div>
+    <p id="advSettingsStatus" role="status" aria-live="polite"></p>
+  </div></div>
+</aside>

@@ -2,9 +2,20 @@
 
 - Static browser application: HTML, CSS, JavaScript, js-dos 8.5.3, and a legacy Turbo C3 runtime.
 - Preserve clean-session behavior, classic Turbo C IDE usability, and `graphics.h`/BGI compatibility.
+- Keep `examples/SHOWCASE.CPP`, the bundled `TURBOC3/Projects/SHOWCASE.CPP` inside `Turboc3.zip`, app startup commands, sample-selector paths, and tests synchronized.
 - Keep js-dos and fflate versions pinned unless the task explicitly requires updating them.
 - Read `README.md` and inspect `git status --short` before changes.
 - Run `node --check app.js`, `git diff --check`, and existing relevant tests.
 - Verify mouse clicks across multiple IDE actions: Help > Contents > Escape > File > Open > Escape > Help.
+- Preserve serialized 90ms mouse press/40ms release-gap input and the pinned DOSBox startup command.
+- Keep restored TURBOC3/Projects paths in runtime-exact casing; the backing filesystem is case-sensitive.
+- Never snapshot guest files on F2 or tab-hide; these operations may race compiler writes.
+- Keep automatic menu recovery bounded to a verified ignored click, with one repaint and one retry.
+- Keep browser IndexedDB source persistence separate from js-dos desktop/session restore, which remains disabled.
+- Use existing optional tests in tests/mouse-ui-smoke.cjs, tests/layout-smoke.cjs, and tests/input-fullscreen-smoke.cjs; they require Playwright but the static app does not.
+- Keep README.md and HANDOFF.md synchronized with verified interface or workflow changes.
+- Full DOS is optional: load advanced.js and advanced-ui.html lazily, preserve the Turbo C default, share user files through IndexedDB without restoring DOSBox snapshots.
+- Full DOS file operations use supported fsTree/fsReadFile/fsWriteFile/fsDeleteFile APIs. Serialize command helpers; never interleave keyboard events. Avoid enabling disk-image OS boot or CUE/BIN auto-mounting without verifying the backend and resource costs.
+- Validate archive central-directory size limits before asynchronous decompression and reject unsafe paths.
 - The bundled Turbo C components are third-party legacy software; review redistribution permissions before public release.
 - Do not commit, push, publish, or deploy unless explicitly requested.
