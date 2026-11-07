@@ -41,14 +41,16 @@ try {
  const canvas=p.locator("#dos-container canvas");
  let box=await canvas.boundingBox();
  await p.mouse.click(box.x+box.width*.05,box.y+box.height*.018);
- await p.waitForFunction(()=>document.querySelector("#log").textContent.includes("Turbo C menu recovered automatically"),{timeout:6000});
+ // The guest repaint is asynchronous. Verify the actual DOS screenshot,
+ // not an early diagnostic log which can predate the menu drawing.
+ await p.waitForFunction(async()=>{
+  const im=await window.__ci.screenshot();
+  const i=4*(Math.floor(.16*im.height)*im.width+Math.floor(.12*im.width));
+  const r=im.data[i],g=im.data[i+1],b=im.data[i+2];
+  return r>95&&Math.abs(r-g)<25&&Math.abs(g-b)<25;
+ },null,{timeout:8000,polling:250});
  assert.equal(await p.evaluate(()=>window.__droppedMousePresses),1);
  await p.screenshot({path:"/tmp/turboc-auto-recovered-file.png"});
- const check=await p.evaluate(async()=>{
-  const im=await window.__ci.screenshot(),i=4*(Math.floor(.16*im.height)*im.width+Math.floor(.12*im.width));
-  return [im.data[i],im.data[i+1],im.data[i+2]];
- });
- assert(check[0]>95 && Math.abs(check[0]-check[1])<25,"File menu should be visible after automatic recovery");
  await p.mouse.click(box.x+box.width*.96,box.y+box.height*.018);await p.waitForTimeout(350);
  await p.screenshot({path:"/tmp/turboc-auto-recovered-help.png"});
  const log=await p.locator("#log").textContent();

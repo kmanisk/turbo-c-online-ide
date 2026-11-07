@@ -1,14 +1,14 @@
 <aside class="drawer" id="advancedFilesDrawer" hidden role="dialog" aria-modal="true" aria-labelledby="advancedFilesTitle">
-  <div class="drawer-heading"><div><span class="eyebrow">FULL DOS / C:</span><h2 id="advancedFilesTitle">Drive explorer</h2></div><button type="button" class="icon-button close-drawer" data-close-drawer aria-label="Close file manager">×</button></div>
+  <div class="drawer-heading"><div><h2 id="advancedFilesTitle">Files on C:</h2></div><button type="button" class="icon-button close-drawer" data-close-drawer aria-label="Close file manager">×</button></div>
   <div class="drawer-scroll">
     <div class="drawer-section">
-      <div class="workspace-summary"><span id="advUsedSpace">Workspace: 0 B</span><span id="advStorageState" class="saved-indicator">Browser local</span></div>
+      <div class="workspace-summary"><span id="advUsedSpace">Workspace: 0 B</span><span id="advStorageState" class="saved-indicator">Saved in this browser</span></div>
       <p>Saved locally, not synced. DOSBox sees new/renamed files reliably after restart. Upload software you have the right to use.</p>
       <div class="drawer-actions"><button id="advSaveBtn" type="button">Save locally</button><button id="advResetBtn" class="danger-button" type="button">Reset workspace</button></div>
     </div>
     <div class="drawer-section">
       <h3>Import your software</h3>
-      <div id="advDropzone" class="dos-dropzone" role="button" tabindex="0" aria-label="Select or drop files">Drop files, ZIP, JSDOS, ISO or IMG here<span>Click to browse · files stay in your browser</span></div>
+      <div id="advDropzone" class="dos-dropzone" role="button" tabindex="0" aria-label="Select or drop files">Drop files here, or click to browse<span>Files remain in this browser</span></div>
       <input id="advancedInput" type="file" multiple accept=".c,.cpp,.h,.hpp,.txt,.exe,.com,.bat,.zip,.jsdos,.iso,.img,.ima,.cue,.bin" hidden>
       <label class="field-label" for="advTarget">ZIP / JSDOS extraction folder (under C:)</label>
       <input id="advTarget" class="field-input" value="UPLOADS" spellcheck="false" maxlength="48">
@@ -36,7 +36,7 @@
   </div>
 </aside>
 <aside class="drawer" id="settingsDrawer" hidden role="dialog" aria-modal="true" aria-labelledby="dosSettingsTitle">
-  <div class="drawer-heading"><div><span class="eyebrow">ADVANCED ONLY</span><h2 id="dosSettingsTitle">DOSBox settings</h2></div><button type="button" class="icon-button close-drawer" data-close-drawer aria-label="Close settings">×</button></div>
+  <div class="drawer-heading"><div><h2 id="dosSettingsTitle">DOSBox settings</h2></div><button type="button" class="icon-button close-drawer" data-close-drawer aria-label="Close settings">×</button></div>
   <div class="drawer-scroll"><div class="drawer-section">
     <p>Settings apply on the next Full DOS restart. Incorrect configuration can prevent booting. Reset restores a working DOS prompt.</p>
     <div class="settings-grid">

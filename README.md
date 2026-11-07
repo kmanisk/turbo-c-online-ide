@@ -20,7 +20,7 @@ Run **Turbo C / Turbo C++ 3.0** in your browser with classic Borland **graphics.
 1. Choose **Turbo C** or **Full DOS**, then press **Start**.
 2. For graphics, open the bundled `SHOWCASE.CPP` program, or select **BGI Graphics** from the sample menu.
 3. In Turbo C, use **F2** to save, **Alt+F9** to compile, **Ctrl+F9** to run, and **Alt+F5** to view program output.
-4. Choose **Files → Save locally** after editing, and **Download ZIP** to back up your work.
+4. Open **Download** (down-arrow icon) to save files in this browser or export a ZIP backup. Use **More** (three dots) for scaling and mouse controls.
 
 A physical keyboard is recommended. Files saved in browser storage do not automatically sync between devices.
 

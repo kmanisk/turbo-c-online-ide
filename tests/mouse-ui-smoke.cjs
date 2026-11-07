@@ -44,7 +44,7 @@ async function main(){
   assert.equal(await page.evaluate(()=>typeof window.Dos),"undefined","js-dos must load after Start");
   await page.locator("#idleSampleSelect").selectOption("hello");
   await page.waitForTimeout(160);
-  assert.equal(await page.locator("#savedIndicator").textContent(),"Saved locally");
+  assert.equal(await page.locator("#savedIndicator").textContent(),"Saved in this browser");
   await page.locator("#startBtn").click();
   await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running");
   assert.equal(await page.evaluate(()=>window.__mock.starts),1);
@@ -64,6 +64,7 @@ async function main(){
   assert.equal(await page.evaluate(()=>window.__mock.stops),0);
   await page.locator("#themeBtn").click();
   assert.equal(await page.locator("body").getAttribute("data-theme"),"classic");
+  await page.locator(".toolbar-more > summary").click();
   await page.locator("#scaleBtn").click();
   assert.equal(await page.locator("#scaleBtn").getAttribute("aria-pressed"),"true");
   await page.locator("#helpBtn").click();

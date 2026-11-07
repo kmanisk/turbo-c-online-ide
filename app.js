@@ -105,7 +105,7 @@ ${START_COMMAND}
   }
   function updateTheme() {
     const theme = document.body.dataset.theme;
-    ui.themeBtn.title = theme === "dark" ? "Switch to Classic Blue" : "Switch to dark theme";
+    ui.themeBtn.title = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
     ui.themeBtn.setAttribute("aria-label", ui.themeBtn.title);
     ui.themeBtn.innerHTML = theme === "dark"
       ? '<svg class="icon"><use href="#i-moon"/></svg>'
@@ -115,16 +115,16 @@ ${START_COMMAND}
     document.body.dataset.theme = document.body.dataset.theme === "classic" ? "dark" : "classic";
     saveSetting("turboc:theme", document.body.dataset.theme);
     updateTheme();
-    announce("Theme: " + (document.body.dataset.theme === "classic" ? "Classic Blue" : "Dark"));
+    announce("Theme: " + (document.body.dataset.theme === "classic" ? "Light" : "Dark"));
   }
   function setFocus(isFocused) {
     if (appState !== "running" && appState !== "paused") isFocused = false;
     focused = isFocused;
-    ui.focusBadge.textContent = appState === "idle" ? "NOT STARTED" :
-      appState === "loading" ? "INITIALIZING" :
-      appState === "error" ? "ERROR" :
-      appState === "paused" ? "PAUSED" :
-      (focused ? "FOCUSED" : "CLICK TO FOCUS");
+    ui.focusBadge.textContent = appState === "idle" ? "Stopped" :
+      appState === "loading" ? "Loading" :
+      appState === "error" ? "Error" :
+      appState === "paused" ? "Paused" :
+      (focused ? "Focused" : "Click to focus");
     ui.focusBadge.classList.toggle("is-focused", focused);
   }
   function setState(state, message) {
@@ -134,7 +134,7 @@ ${START_COMMAND}
     ui.loadingOverlay.hidden = state !== "loading";
     ui.pausedOverlay.hidden = state !== "paused";
     ui.errorOverlay.hidden = state !== "error";
-    ui.stateLabel.textContent = message || ({idle:"READY · PRESS START",loading:"STARTING DOS",running:selectedMode==="dos"?"RUNNING · FULL DOS":"RUNNING · TURBO C 3.0",paused:"SESSION PAUSED",error:"STARTUP ERROR"}[state]);
+    ui.stateLabel.textContent = message || ({idle:"Stopped",loading:"Loading",running:selectedMode==="dos"?"Running":"Running",paused:"Paused",error:"Error"}[state]);
     ui.restartBtn.disabled = !["running", "paused"].includes(state);
     ui.pauseBtn.disabled = !["running", "paused"].includes(state);
     ui.stopBtn.disabled = !["running", "paused"].includes(state);
@@ -155,9 +155,9 @@ ${START_COMMAND}
       el.classList.toggle("is-done", i<index);
       el.classList.toggle("is-active", i===index);
     });
-    ui.loadingCommand.textContent = ["FETCH RUNTIME","BOOT DOSBOX",selectedMode==="dos"?"START DOS SHELL":"START TC.EXE","READY"][Math.max(0,index)];
+    ui.loadingCommand.textContent = ["Downloading runtime","Starting DOSBox",selectedMode==="dos"?"Opening DOS prompt":"Launching Turbo C","Ready"][Math.max(0,index)];
     ui.loadingDetail.textContent = detail || "";
-    ui.stateLabel.textContent = detail || "STARTING DOS";
+    ui.stateLabel.textContent = detail || "Loading";
   }
   function showError(error) {
     lastError = error;
@@ -313,13 +313,13 @@ ${START_COMMAND}
     $("dosHelp").hidden=!isDos;
     $("dosModeNote").hidden=!isDos;
     $("idleSampleSelect").closest("label").hidden=isDos;
-    $("idleOverline").textContent=isDos?"ADVANCED / DOSBOX":"READY TO PROGRAM";
-    $("idleTitle").textContent=isDos?"Your own DOS workspace.":"Classic C. Zero setup.";
+    $("idleOverline").textContent=isDos?"Full DOS":"Turbo C";
+    $("idleTitle").textContent=isDos?"A DOS prompt in your browser":"Turbo C++ 3.0 in your browser";
     $("idleDescription").textContent=isDos?
-      "Explore C:, run supplied DOS executables, mount images and manage your virtual files.":
-      "Turbo C++ 3.0, graphics.h and the original DOS development environment, right in your browser.";
-    $("startLabel").textContent=isDos?"Start Full DOS":"Start Turbo C3";
-    $("idleHint").textContent=isDos?"Start, then click the screen to use the DOS prompt.":"Click Start, then click the DOS screen to focus the keyboard.";
+      "Run your own DOS programs and manage files stored in this browser.":
+      "Runs in DOSBox through WebAssembly. Files are saved in this browser.";
+    $("startLabel").textContent=isDos?"Start":"Start";
+    $("idleHint").textContent=isDos?"After it starts, click the screen to use the DOS prompt.":"After it starts, click the screen to use the keyboard.";
     $("windowTitle").textContent=isDos?"DOSBOX — C:\\>":"TURBOC3 — NONAME00.CPP";
     $("stepLaunch").textContent=isDos?"03 · Opening DOS prompt":"03 · Launching Turbo C";
     $("loadingRoot").textContent=isDos?"C:\\>":"C:\\TURBOC3>";
@@ -395,7 +395,7 @@ ${START_COMMAND}
   }
   function markSaved(status) {
     const saved = status === "saved";
-    ui.savedIndicator.textContent = saved?"Saved locally":status==="pending"?"Unsaved changes":status==="unavailable"?"Storage unavailable":"Clean session";
+    ui.savedIndicator.textContent = saved?"Saved in this browser":status==="pending"?"Unsaved changes":status==="unavailable"?"Storage unavailable":"No files saved";
     ui.fileSavedBadge.textContent = ui.savedIndicator.textContent;
     ui.savedIndicator.classList.toggle("is-saved",saved);
     ui.fileSavedBadge.classList.toggle("is-saved",saved);

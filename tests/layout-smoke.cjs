@@ -51,6 +51,7 @@ async function main() {
           "DOS display should be 4:3");
         assert(result.background!=="rgb(255, 255, 255)",
           "js-dos stylesheet must not override host background");
+        await page.locator(".toolbar-more > summary").click();
         await page.locator("#scaleBtn").click();
         assert.equal(await page.locator("#scaleBtn").getAttribute("aria-pressed"),"true");
         assert.deepEqual(errors,[]);

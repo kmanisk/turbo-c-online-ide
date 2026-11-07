@@ -29,7 +29,7 @@ async function main() {
     await page.locator("#startBtn").click();
     await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running",
       {timeout:30000});
-    assert.equal(await page.locator("#stateLabel").innerText(),"RUNNING · FULL DOS");
+    assert.equal(await page.locator("#stateLabel").textContent(),"Running");
     await page.locator("#modeTurbo").click();
     assert.equal(await page.locator("#confirmPopover").isVisible(),true);
     await page.locator("#cancelConfirmBtn").click();

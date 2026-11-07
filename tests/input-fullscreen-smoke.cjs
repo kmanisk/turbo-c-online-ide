@@ -32,7 +32,8 @@ async function main(){
      const bounds=await page.locator("#dos-container canvas").boundingBox();
      const x=name==="File"?.05:.96;
      await page.mouse.click(bounds.x+bounds.width*x,bounds.y+bounds.height*.018);
-     await page.waitForTimeout(340);
+     // The existing guest-side mouse recovery may repaint and replay one ignored click.
+     await page.waitForTimeout(1800);
    };
    const menuSample=async()=>page.evaluate(async()=>{
      const image=await window.__testCi.screenshot();
@@ -67,6 +68,7 @@ async function main(){
    await clickMenu("File");
    assert(isGray((await menuSample()).left),"Mouse must work after opening and closing Help");
 
+   await page.locator(".toolbar-more > summary").click();
    await page.locator("#resetMouseBtn").click();
    await page.waitForTimeout(550);
    assert(!isGray((await menuSample()).left),"Repair mouse must repaint and close the IDE system menu");

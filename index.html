@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0d1117">
+  <meta name="theme-color" content="#1c1c1e">
   <meta name="description" content="Turbo C Online IDE: run Turbo C/C++ 3.0 and Borland graphics.h BGI programs in your browser with a fast, keyboard-friendly development environment.">
-  <title>Turbo C Online IDE | Turbo C3 Web Lab</title>
+  <title>Turbo C3 Web Lab</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=mousefix3">
-  <script src="app.js?v=cpp-demo-1" defer></script>
+  <link rel="stylesheet" href="styles.css?v=declutter-1">
+  <script src="app.js?v=neutral-ui-1" defer></script>
 </head>
 <body data-theme="dark">
   <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -38,24 +38,23 @@
       <div class="brand">
         <img src="favicon.svg" class="brand-icon" alt="" width="36" height="36">
         <div class="brand-text">
-          <h1>Turbo <span>C3</span> Web Lab</h1>
-          <p>ONLINE IDE <span class="brand-sep">/</span> DOSBOX · WEBASSEMBLY</p>
+          <h1>Turbo C3 Web Lab</h1>
         </div>
       </div>
-      <div class="mode-switch" role="group" aria-label="Emulator mode"><button id="modeTurbo" type="button" aria-pressed="true">Turbo C</button><button id="modeDos" type="button" aria-pressed="false">Full DOS <small>ADVANCED</small></button></div>
+      <div class="mode-switch" role="group" aria-label="Emulator mode"><button id="modeTurbo" type="button" aria-pressed="true">Turbo C</button><button id="modeDos" type="button" aria-pressed="false">Full DOS <small>advanced</small></button></div>
       <nav class="header-actions" aria-label="Workspace">
         <button class="icon-button" id="helpBtn" type="button" title="Turbo C shortcuts and help" aria-label="Open help"><svg class="icon"><use href="#i-help"/></svg></button>
         <button class="icon-button" id="diagnosticsBtn" type="button" title="Diagnostics" aria-label="Open diagnostics"><svg class="icon"><use href="#i-activity"/></svg></button>
-        <button class="icon-button" id="themeBtn" type="button" title="Toggle Classic Blue theme" aria-label="Toggle theme"><svg class="icon"><use href="#i-moon"/></svg></button>
-        <button class="icon-button" id="headerFullscreenBtn" type="button" title="Fullscreen: fill display (Esc to exit)" aria-label="Fullscreen emulator"><svg class="icon"><use href="#i-expand"/></svg></button>
+        <button class="icon-button" id="themeBtn" type="button" title="Switch theme" aria-label="Toggle theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+        <button class="icon-button" id="headerFullscreenBtn" type="button" hidden aria-hidden="true" tabindex="-1" title="Fullscreen: fill display (Esc to exit)" aria-label="Fullscreen emulator"><svg class="icon"><use href="#i-expand"/></svg></button>
       </nav>
     </header>
 
     <main class="main-workspace">
       <section class="monitor" id="monitor" aria-label="Turbo C3 emulator window">
         <div class="monitor-titlebar">
-          <div class="title-left"><span class="status-dot" id="statusDot" aria-hidden="true"></span><span class="window-caption" id="windowTitle">TURBOC3 — NONAME00.CPP</span></div>
-          <div class="title-right"><span id="focusBadge" class="focus-badge">NOT STARTED</span><span class="window-version">DOS / 3.0</span></div>
+          <div class="title-left"><span class="status-dot" id="statusDot" role="img" aria-hidden="false" aria-labelledby="stateLabel" tabindex="0"></span><span id="stateLabel" class="sr-only" role="status" aria-live="polite">Stopped</span><span class="window-caption" id="windowTitle">TURBOC3 — NONAME00.CPP</span></div>
+          <div class="title-right sr-only"><span id="savedIndicator" class="saved-indicator sr-only">Clean session</span><span id="focusBadge" class="focus-badge sr-only">Not focused</span></div>
         </div>
 
         <div class="monitor-viewport" id="monitorViewport">
@@ -64,16 +63,16 @@
           </div>
 
           <div class="overlay idle-overlay" id="idleOverlay">
+            <img class="idle-preview" src="assets/idle-preview.png" alt="" aria-hidden="true">
             <div class="idle-content">
-              <div class="idle-badge">C:\&gt;_ <span class="cursor-block">█</span></div>
-              <div class="idle-overline" id="idleOverline">READY TO PROGRAM</div>
-              <h2 id="idleTitle">Classic C. Zero setup.</h2>
-              <p id="idleDescription">Turbo C++ 3.0, graphics.h and the original DOS development environment, right in your browser.</p>
-              <button class="primary-button" id="startBtn" type="button"><svg class="icon"><use href="#i-play"/></svg><span id="startLabel">Start Turbo C3</span><span class="button-key">↵</span></button>
-              <p class="idle-hint" id="idleHint">Click Start, then click the DOS screen to focus the keyboard.</p><p id="dosModeNote" class="dos-mode-note" hidden>DOSBox emulates DOS; this is not original MS-DOS. Supply your own software.</p>
-              <label class="sample-inline" for="idleSampleSelect">Or try a sample
+              <div class="idle-overline sr-only" id="idleOverline">Turbo C</div>
+              <h2 id="idleTitle">Turbo C++ 3.0</h2>
+              <p id="idleDescription">Runs in DOSBox through WebAssembly. Files are saved in this browser.</p>
+              <button class="primary-button" id="startBtn" type="button"><span id="startLabel">Start</span></button>
+              <p class="idle-hint" id="idleHint">Click the screen after it starts to type.</p><p id="dosModeNote" class="dos-mode-note sr-only" hidden>This is DOSBox, not original MS-DOS. Bring your own software.</p>
+              <label class="sample-inline" for="idleSampleSelect">Load a sample program
                 <select id="idleSampleSelect" aria-label="Choose a sample program">
-                  <option value="">Choose example…</option>
+                  <option value="">Choose sample…</option>
                   <option value="hello">Hello World</option><option value="loops">Loops</option><option value="arrays">Arrays</option>
                   <option value="structs">Structs</option><option value="files">File I/O</option><option value="graphics">BGI Graphics</option>
                 </select>
@@ -83,24 +82,24 @@
 
           <div class="overlay loading-overlay" id="loadingOverlay" hidden role="status">
             <div class="loading-content">
-              <div class="loading-prompt"><span id="loadingRoot">C:\TURBOC3&gt;</span> <span id="loadingCommand">INITIALIZING...</span></div>
-              <h2>Starting your workspace</h2>
+              <div class="loading-prompt"><span id="loadingRoot" class="sr-only">C:\TURBOC3&gt;</span> <span id="loadingCommand">Preparing runtime</span></div>
+              <h2>Starting DOSBox</h2>
               <div class="progress-track"><div class="progress-fill" id="loadingFill"></div></div>
               <div class="progress-steps">
                 <span id="stepDownload">01 · Downloading runtime</span>
                 <span id="stepBoot">02 · Booting DOS</span>
                 <span id="stepLaunch">03 · Launching Turbo C</span>
               </div>
-              <p class="progress-detail" id="loadingDetail">Preparing runtime…</p>
+              <p class="progress-detail sr-only" id="loadingDetail">Preparing runtime…</p>
             </div>
           </div>
 
           <div class="overlay paused-overlay" id="pausedOverlay" hidden>
             <div class="paused-card">
               <svg class="icon icon-large"><use href="#i-pause"/></svg>
-              <h2>Emulation paused</h2>
+              <h2>Paused</h2>
               <p>Your DOS session is still in memory.</p>
-              <button class="primary-button" type="button" id="resumeBtn"><svg class="icon"><use href="#i-play"/></svg>Resume session</button>
+              <button class="primary-button" type="button" id="resumeBtn"><svg class="icon"><use href="#i-play"/></svg>Resume</button>
             </div>
           </div>
 
@@ -109,49 +108,49 @@
               <div class="error-mark">!</div><h2 id="errorTitle">Could not start Turbo C</h2>
               <p id="errorMessage">The emulator could not be initialized.</p>
               <p class="error-fix" id="errorFix"></p>
-              <div class="error-actions"><button class="primary-button" id="retryBtn" type="button">Try again</button><button id="copyErrorBtn" type="button">Copy diagnostics</button></div>
+              <div class="error-actions"><button id="copyErrorBtn" type="button">Copy diagnostics</button></div>
             </div>
           </div>
           <div class="crt-overlay" id="crtOverlay" hidden aria-hidden="true"></div>
           <div class="focus-tip" id="focusTip" hidden><span>Click the DOS screen to focus it. <kbd>Esc</kbd> releases mouse lock; <kbd>Shift</kbd> + <kbd>Esc</kbd> returns to page controls.</span><button type="button" id="dismissTipBtn" aria-label="Dismiss mouse hint"><svg class="icon"><use href="#i-close"/></svg></button></div>
         </div>
 
-        <div class="monitor-statusbar">
-          <span id="stateLabel" role="status" aria-live="polite">READY · PRESS START</span>
-          <div class="monitor-meta"><span id="savedIndicator" class="saved-indicator">Clean session</span><span id="scaleLabel">FIT · 4:3</span></div>
-        </div>
-      </section>
-
-      <div id="dosQuickBar" class="dos-quickbar" hidden aria-label="DOS command helpers"><span class="quick-label">COMMANDS</span><button type="button" data-dos-command="DIR">DIR</button><button type="button" data-dos-command="CLS">CLS</button><button type="button" data-dos-command="CD ..">CD ..</button><button type="button" data-dos-command="MEM">MEM</button><button type="button" data-dos-command="VER">VER</button><button type="button" data-dos-command="MOUNT">MOUNT</button><span class="quick-note">Only at a DOS prompt</span><button type="button" id="dosSettingsBtn" class="quick-settings">Settings</button></div>
+        <div class="monitor-statusbar sr-only"><div class="monitor-meta"><span id="scaleLabel">Fit · 4:3</span></div></div>
       <div class="toolbar" role="toolbar" aria-label="Emulator controls">
-        <div class="tool-group">
+        <div class="tool-group run-controls">
           <button class="tool-button" id="restartBtn" type="button" disabled title="Start or restart Turbo C" aria-label="Start or restart Turbo C"><svg class="icon"><use href="#i-rotate"/></svg><span class="tool-label" id="restartLabel">Restart</span></button>
           <button class="tool-button" id="pauseBtn" type="button" disabled title="Pause or resume emulation" aria-label="Pause or resume"><svg class="icon"><use href="#i-pause"/></svg><span class="tool-label" id="pauseLabel">Pause</span></button>
           <button class="tool-button danger-button" id="stopBtn" type="button" disabled title="Stop the emulator" aria-label="Stop emulator"><svg class="icon"><use href="#i-stop"/></svg><span class="tool-label">Stop</span></button>
         </div>
-        <div class="tool-separator"></div>
-        <div class="tool-group">
-          <button class="tool-button" id="uploadBtn" type="button" title="Import .c or .cpp file" aria-label="Import a C or C++ file"><svg class="icon"><use href="#i-upload"/></svg><span class="tool-label">Upload</span></button>
-          <button class="tool-button" id="downloadBtn" type="button" title="Workspace files and downloads" aria-label="Open workspace files"><svg class="icon"><use href="#i-download"/></svg><span class="tool-label">Files</span></button>
+        <div class="tool-separator run-divider" aria-hidden="true"></div>
+        <div class="tool-group quick-controls">
+          <button class="tool-button" id="uploadBtn" type="button" title="Import .c or .cpp file" aria-label="Import a C or C++ file"><svg class="icon"><use href="#i-upload"/></svg><span class="tool-label sr-only">Upload</span></button>
+          <button class="tool-button" id="downloadBtn" type="button" title="Download files · saved files stay in this browser" aria-label="Download files"><svg class="icon"><use href="#i-download"/></svg><span class="tool-label sr-only">Download</span></button>
+          <button class="tool-button" id="fullscreenBtn" type="button" title="Fullscreen: fill display (Esc to exit)" aria-label="Toggle fullscreen"><svg class="icon"><use href="#i-expand"/></svg><span class="tool-label sr-only">Fullscreen</span></button>
         </div>
-        <div class="tool-separator"></div>
-        <div class="tool-group tool-group-end">
-          <button class="tool-button" id="fullscreenBtn" type="button" title="Fullscreen: fill display (Esc to exit)" aria-label="Toggle fullscreen"><svg class="icon"><use href="#i-expand"/></svg><span class="tool-label">Fullscreen</span></button>
-          <button class="tool-button" id="scaleBtn" type="button" title="Toggle Fit / Pixel perfect" aria-label="Toggle pixel-perfect scaling" aria-pressed="false"><svg class="icon"><use href="#i-scale"/></svg><span class="tool-label" id="scaleButtonLabel">Fit</span></button>
-          <button class="tool-button secondary-tool" id="resetMouseBtn" type="button" disabled title="Repair Turbo C mouse (repaint desktop and reset buttons)" aria-label="Repair Turbo C mouse"><svg class="icon"><use href="#i-mouse"/></svg><span class="tool-label">Repair mouse</span></button>
-          <button class="tool-button secondary-tool" id="mouseLockBtn" type="button" disabled title="Capture or release mouse" aria-label="Capture mouse"><svg class="icon"><use href="#i-settings"/></svg><span class="tool-label" id="mouseLockLabel">Capture</span></button>
-        </div>
+        <details class="toolbar-more">
+          <summary title="More options" aria-label="More options"><span aria-hidden="true">⋯</span></summary>
+          <div class="more-panel" role="group" aria-label="Display and mouse options">
+            <button class="tool-button" id="scaleBtn" type="button" aria-label="Toggle pixel-perfect scaling" aria-pressed="false"><svg class="icon"><use href="#i-scale"/></svg><span class="tool-label" id="scaleButtonLabel">Fit</span></button>
+            <button class="tool-button secondary-tool" id="resetMouseBtn" type="button" disabled title="Repair Turbo C mouse (repaint desktop and reset buttons)" aria-label="Repair Turbo C mouse"><svg class="icon"><use href="#i-mouse"/></svg><span class="tool-label">Repair mouse</span></button>
+            <button class="tool-button secondary-tool" id="mouseLockBtn" type="button" disabled title="Capture or release mouse" aria-label="Capture mouse"><svg class="icon"><use href="#i-settings"/></svg><span class="tool-label" id="mouseLockLabel">Capture</span></button>
+            <button class="primary-button" id="retryBtn" type="button">Try again</button>
+          </div>
+        </details>
       </div>
 
-      <footer class="workspace-footer"><span><span class="footer-dot"></span> LOCAL-FIRST WORKSPACE <span class="footer-sep">·</span> NO ACCOUNT REQUIRED</span><span id="workspaceHint">F2 Save · Alt+F9 Compile · Ctrl+F9 Run</span></footer>
-      <p class="mobile-note">A physical keyboard is recommended for Turbo C shortcuts.</p>
+      </section>
+
+      <div id="dosQuickBar" class="dos-quickbar" hidden aria-label="DOS command helpers"><span class="quick-label">Commands</span><button type="button" data-dos-command="DIR">DIR</button><button type="button" data-dos-command="CLS">CLS</button><button type="button" data-dos-command="CD ..">CD ..</button><button type="button" data-dos-command="MEM">MEM</button><button type="button" data-dos-command="VER">VER</button><button type="button" data-dos-command="MOUNT">MOUNT</button><span class="quick-note">Only at a DOS prompt</span><button type="button" id="dosSettingsBtn" class="quick-settings">Settings</button></div>
+      <footer class="workspace-footer sr-only"><span id="workspaceHint">F2 Save · Alt+F9 Compile · Ctrl+F9 Run</span></footer>
+      <p class="mobile-note">A physical keyboard is recommended.</p>
     </main>
   </div>
 
   <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
 
   <aside class="drawer" id="helpDrawer" hidden aria-labelledby="helpTitle" aria-modal="true" role="dialog">
-    <div class="drawer-heading"><div><span class="eyebrow">REFERENCE</span><h2 id="helpTitle">Turbo C quick guide</h2></div><button class="icon-button close-drawer" data-close-drawer type="button" aria-label="Close help"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="drawer-heading"><div><h2 id="helpTitle">Help</h2></div><button class="icon-button close-drawer" data-close-drawer type="button" aria-label="Close help"><svg class="icon"><use href="#i-close"/></svg></button></div>
     <div class="drawer-scroll">
       <div class="drawer-section"><h3>Keyboard shortcuts</h3><div class="shortcut-grid">
         <span>Save file</span><kbd>F2</kbd><span>Open file</span><kbd>F3</kbd><span>Compile</span><kbd>Alt+F9</kbd><span>Make / Build</span><kbd>F9</kbd>
@@ -172,21 +171,21 @@ initgraph(&amp;gd, &amp;gm, "C:\\TURBOC3\\BGI");</pre><p>If you get “Graphics 
   </aside>
 
   <aside class="drawer" id="filesDrawer" hidden aria-labelledby="filesTitle" aria-modal="true" role="dialog">
-    <div class="drawer-heading"><div><span class="eyebrow">WORKSPACE</span><h2 id="filesTitle">Source files</h2></div><button class="icon-button close-drawer" data-close-drawer type="button" aria-label="Close files"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="drawer-heading"><div><h2 id="filesTitle">Files</h2></div><button class="icon-button close-drawer" data-close-drawer type="button" aria-label="Close files"><svg class="icon"><use href="#i-close"/></svg></button></div>
     <div class="drawer-scroll">
-      <div class="drawer-section"><div class="workspace-summary"><span id="workspaceStorageLabel">Browser-local sources</span><span class="saved-indicator" id="fileSavedBadge">Not saved yet</span></div><p class="muted">Saved only in this browser. In Turbo C press <kbd>F3</kbd> and open <code>..\PROJECTS\YOURFILE.C</code> after clearing the default <code>*.CPP</code> filter. Restart if a hot-uploaded file is not visible. Use <kbd>F2</kbd> before saving locally or downloading.</p>
+      <div class="drawer-section"><div class="workspace-summary"><span id="workspaceStorageLabel">Files saved in this browser</span><span class="saved-indicator" id="fileSavedBadge">Not saved yet</span></div><p class="muted">Files are stored in this browser. In Turbo C press <kbd>F3</kbd> and open <code>..\PROJECTS\YOURFILE.C</code> after clearing the default <code>*.CPP</code> filter. Restart if a hot-uploaded file is not visible. Use <kbd>F2</kbd> before saving locally or downloading.</p>
       <div class="drawer-actions"><button id="drawerUploadBtn" type="button"><svg class="icon"><use href="#i-upload"/></svg> Import file</button><button id="saveWorkspaceBtn" type="button"><svg class="icon"><use href="#i-check"/></svg> Save locally</button></div>
       </div>
       <div class="drawer-section"><div class="section-line"><h3>Files</h3><button type="button" id="refreshFilesBtn" class="text-button">Refresh</button></div><div id="fileList" class="file-list" role="listbox" aria-label="Project files" tabindex="0"><p class="muted">Start Turbo C to see project files.</p></div>
       <div class="drawer-actions"><button type="button" id="downloadSelectedBtn" disabled>Download selected</button><button type="button" id="downloadZipBtn" disabled>Download ZIP</button></div>
       </div>
-      <div class="drawer-section"><h3>Starter programs</h3><label class="sample-label" for="drawerSampleSelect">Insert a ready-to-use source file</label><select id="drawerSampleSelect"><option value="">Choose sample…</option><option value="hello">Hello World</option><option value="loops">Loops</option><option value="arrays">Arrays</option><option value="structs">Structs</option><option value="files">File I/O</option><option value="graphics">BGI Graphics</option></select></div>
+      <div class="drawer-section"><h3>Sample programs</h3><label class="sample-label" for="drawerSampleSelect">Insert a ready-to-use source file</label><select id="drawerSampleSelect"><option value="">Choose sample…</option><option value="hello">Hello World</option><option value="loops">Loops</option><option value="arrays">Arrays</option><option value="structs">Structs</option><option value="files">File I/O</option><option value="graphics">BGI Graphics</option></select></div>
       <div class="drawer-section danger-section"><h3>Storage</h3><p class="muted">Reset clears saved source files in this browser. The running emulator is unchanged until restarted.</p><button id="resetWorkspaceBtn" type="button" class="danger-button">Reset saved workspace</button></div>
     </div>
   </aside>
 
   <aside class="drawer" id="diagnosticsPanel" hidden aria-labelledby="diagnosticsTitle" aria-modal="true" role="dialog">
-    <div class="drawer-heading"><div><span class="eyebrow">SYSTEM</span><h2 id="diagnosticsTitle">Diagnostics</h2></div><button class="icon-button close-drawer" data-close-drawer type="button" aria-label="Close diagnostics"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="drawer-heading"><div><h2 id="diagnosticsTitle">Diagnostics</h2></div><button class="icon-button close-drawer" data-close-drawer type="button" aria-label="Close diagnostics"><svg class="icon"><use href="#i-close"/></svg></button></div>
     <div class="drawer-scroll">
       <div class="drawer-section"><div class="section-line"><h3>Environment checks</h3><button id="runDiagnosticsBtn" type="button" class="text-button">Run checks</button></div><div class="checks" id="checks"></div></div>
       <div class="drawer-section"><div class="section-line"><h3>Runtime log</h3><div class="small-actions"><button class="text-button" type="button" id="copyLogBtn">Copy</button><button class="text-button" id="clearLogBtn" type="button">Clear</button></div></div><pre id="log" role="log" aria-label="Runtime events"></pre></div>
