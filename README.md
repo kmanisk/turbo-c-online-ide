@@ -2,9 +2,11 @@
 
 Run the classic **Turbo C and Turbo C++ online IDE** in a web browser, with Borland `graphics.h` / BGI support through js-dos, DOSBox, and WebAssembly. No local DOSBox or Turbo C installation is needed to use the browser app.
 
-**Status:** Private development repository. No public site has been deployed from this repository.
+**Live online IDE:** https://kmanisk.github.io/turbo-c-online-ide/
 
-**Previous public demo:** https://kmanisk.github.io/TurboC-WebLab/ (the older fork, without this repository's latest mouse-input fix).
+**Source:** https://github.com/kmanisk/turbo-c-online-ide
+
+This is the current release with the improved DOS mouse-button input timing. The older `TurboC-WebLab` fork is retained separately as a private archive.
 
 ## What it does
 
