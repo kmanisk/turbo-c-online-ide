@@ -7,22 +7,22 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="theme-color" content="#0b0d11" />
-  <meta name="description" content="Run Turbo C/C++ and Borland graphics.h/BGI programs directly in your browser." />
-  <title>Turbo C3 Web Lab</title>
+  <meta name="description" content="Turbo C Online IDE: run Turbo C and C++ programs with original Borland graphics.h BGI support in your browser using js-dos and WebAssembly." />
+  <title>Turbo C Online IDE — Turbo C++ &amp; graphics.h (BGI)</title>
 
   <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/js-dos.css" />
   <link rel="stylesheet" href="styles.css?v=layout9" />
   <script src="https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/js-dos.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js" defer></script>
-  <script src="app.js?v=20" defer></script>
+  <script src="app.js?v=25" defer></script>
 </head>
 <body>
   <main class="app">
     <header class="hero-header">
       <div class="brand-line">
         <img class="brand-icon" src="favicon.svg?v=1" alt="" aria-hidden="true" />
-        <h1><span>Turbo</span> <span class="brand-accent">C3</span> <span>Web Lab</span></h1>
+        <h1><span>Turbo</span> <span class="brand-accent">C</span> <span>Online IDE</span></h1>
       </div>
     </header>
 
@@ -47,6 +47,8 @@
           <button id="restartBtn" type="button">Restart</button>
           <button id="pauseBtn" type="button">Pause</button>
           <button id="fullscreenBtn" type="button">Fullscreen</button>
+          <button id="resetMouseBtn" type="button" title="Release DOS mouse buttons and resynchronize the pointer">Reset mouse</button>
+          <button id="mouseLockBtn" type="button" title="Switch to relative mouse motion; click inside the emulator to capture, Escape to release">Capture mouse</button>
           <button class="danger" id="stopBtn" type="button">Stop</button>
         </div>
       </div>

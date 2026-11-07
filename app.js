@@ -51,6 +51,8 @@ ${START_COMMAND}
     restartBtn: $("restartBtn"),
     pauseBtn: $("pauseBtn"),
     fullscreenBtn: $("fullscreenBtn"),
+    resetMouseBtn: $("resetMouseBtn"),
+    mouseLockBtn: $("mouseLockBtn"),
     stopBtn: $("stopBtn"),
     diagnosticsBtn: $("diagnosticsBtn"),
     diagnosticsPanel: $("diagnosticsPanel"),
@@ -61,6 +63,12 @@ ${START_COMMAND}
   };
 
   let player = null;
+  let commandInterface = null;
+  let frameObserver = null;
+  let mouseResetTimer = null;
+  let releaseMouseInput = null;
+  let clickDiagnostics = { downs: 0, ups: 0, forcedReleases: 0 };
+  let mouseLocked = false;
   let paused = false;
   let booting = false;
   let initFsPromise = null;
@@ -90,6 +98,9 @@ ${START_COMMAND}
     ui.restartBtn.disabled = disabled;
     ui.pauseBtn.disabled = disabled;
     ui.fullscreenBtn.disabled = disabled;
+    ui.resetMouseBtn.disabled = disabled || !commandInterface || BGI_SELF_TEST;
+    ui.mouseLockBtn.disabled = disabled || !commandInterface;
+    ui.mouseLockBtn.textContent = mouseLocked ? "Use pointer" : "Capture mouse";
     ui.stopBtn.disabled = disabled;
   }
 
@@ -221,9 +232,16 @@ ${START_COMMAND}
     );
 
     add(
-      "Mouse mode",
-      "pass",
-      "Host cursor / absolute mode; DOS autolock disabled"
+      "Direct mouse input",
+      typeof commandInterface?.sendMouseButton === "function" ? "pass" : "warn",
+      commandInterface
+        ? "Backend release API available; browser pointer events are tracked"
+        : "Checked after emulator starts"
+    );
+    add(
+      "Mouse event trace",
+      clickDiagnostics.downs > 0 ? "pass" : "warn",
+      `downs=${clickDiagnostics.downs}, ups=${clickDiagnostics.ups}, DOS releases=${clickDiagnostics.forcedReleases}, last target=${clickDiagnostics.target || "none"}`
     );
 
     try {
@@ -242,11 +260,24 @@ ${START_COMMAND}
     return failed.length === 0;
   }
 
+  function cleanupMouseRecovery() {
+    frameObserver?.disconnect();
+    frameObserver = null;
+    if (mouseResetTimer !== null) clearTimeout(mouseResetTimer);
+    releaseMouseInput?.();
+    releaseMouseInput = null;
+    mouseResetTimer = null;
+    clickDiagnostics = { downs: 0, ups: 0, forcedReleases: 0 };
+    commandInterface = null;
+    mouseLocked = false;
+  }
+
   async function stopPlayer({ quiet = false } = {}) {
     const current = player;
     player = null;
     paused = false;
     booting = false;
+    cleanupMouseRecovery();
 
     if (current) {
       try {
@@ -261,6 +292,175 @@ ${START_COMMAND}
     showEmptyState();
     ui.pauseBtn.textContent = "Pause";
     setControls(false);
+  }
+
+  // js-dos provides this backend-side cursor reset. Do not synthesize mouse
+  // movement or subscribe to ci.events().onFrameSize: the renderer owns it.
+  function resetMouse(reason = "manual") {
+    if (!player || !commandInterface || typeof commandInterface.sendMouseSync !== "function") {
+      return false;
+    }
+
+    commandInterface.sendMouseButton?.(0, false);
+    commandInterface.sendMouseButton?.(1, false);
+    commandInterface.sendMouseSync();
+    log("Mouse buttons released and pointer synchronized", reason);
+    return true;
+  }
+
+  function scheduleMouseReset(reason) {
+    if (!commandInterface) return;
+    if (mouseResetTimer !== null) clearTimeout(mouseResetTimer);
+    mouseResetTimer = setTimeout(() => {
+      mouseResetTimer = null;
+      resetMouse(reason);
+    }, 150);
+  }
+
+  function watchVideoMode() {
+    frameObserver?.disconnect();
+    let lastSize = null;
+    frameObserver = new MutationObserver(() => {
+      const canvas = ui.container.querySelector("canvas");
+      if (!canvas) return;
+
+      const size = `${canvas.width}x${canvas.height}`;
+      if (lastSize !== null && lastSize !== size) {
+        scheduleMouseReset(`DOS video mode changed to ${size}`);
+      }
+      lastSize = size;
+    });
+    frameObserver.observe(ui.container, {
+      attributes: true,
+      attributeFilter: ["width", "height"],
+      childList: true,
+      subtree: true,
+    });
+
+    // A canvas usually exists at ci-ready. If it does, record its size now.
+    const canvas = ui.container.querySelector("canvas");
+    if (canvas) lastSize = `${canvas.width}x${canvas.height}`;
+  }
+
+  // Mouse events cross from the browser to a DOSBox worker. A browser can
+  // dispatch pointerdown/up in the same event-loop turn, too quickly for DOS
+  // to observe the press before its release. Hold each press for at least
+  // two video ticks; never send a preemptive release for a normal new click.
+  // Coordinate mapping is from the live canvas, independently of its size.
+  function installDirectMouseInput() {
+    releaseMouseInput?.();
+    releaseMouseInput = null;
+    const ci = commandInterface;
+    if (!ci || typeof ci.sendMouseButton !== "function" ||
+        typeof ci.sendMouseMotion !== "function") return;
+
+    const MIN_PRESS_MS = 50;
+    let activePointer = null;
+    let activeButton = 0;
+    let pressedAt = 0;
+    let releaseTimer = null;
+    let downSent = false;
+
+    function position(event) {
+      const target = event.target;
+      if (!(target instanceof Element) || !ui.container.contains(target)) return null;
+      if (target.closest("button, input, a, [role='button']")) return null;
+      const canvas = ui.container.querySelector("canvas");
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      if (event.clientX < rect.left || event.clientX > rect.right ||
+          event.clientY < rect.top || event.clientY > rect.bottom) return null;
+      return {
+        x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
+        y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)),
+      };
+    }
+
+    function release() {
+      if (releaseTimer !== null) clearTimeout(releaseTimer);
+      releaseTimer = null;
+      if (!downSent) return;
+      downSent = false;
+      if (!player || commandInterface !== ci) return;
+      ci.sendMouseButton(activeButton, false);
+      clickDiagnostics.forcedReleases++;
+    }
+
+    function onDown(event) {
+      if (mouseLocked || !player || commandInterface !== ci) return;
+      if (event.button !== 0 && event.button !== 2) return;
+      const xy = position(event);
+      if (!xy) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      clickDiagnostics.downs++;
+      clickDiagnostics.target = event.target.tagName.toLowerCase();
+      release(); // only releases a genuinely pending prior press
+      activePointer = event.pointerId;
+      activeButton = event.button === 2 ? 1 : 0;
+      ci.sendMouseMotion(xy.x, xy.y);
+      ci.sendMouseButton(activeButton, true);
+      pressedAt = performance.now();
+      downSent = true;
+    }
+
+    function onMove(event) {
+      if (mouseLocked || !player || commandInterface !== ci) return;
+      const xy = position(event);
+      if (!xy && event.pointerId !== activePointer) return;
+      event.stopImmediatePropagation();
+      if (xy) ci.sendMouseMotion(xy.x, xy.y);
+    }
+
+    function onUp(event) {
+      if (mouseLocked || !player || commandInterface !== ci) return;
+      if (event.pointerId !== activePointer) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const xy = position(event);
+      if (xy) ci.sendMouseMotion(xy.x, xy.y);
+      activePointer = null;
+      clickDiagnostics.ups++;
+      const remaining = Math.max(0, MIN_PRESS_MS - (performance.now() - pressedAt));
+      if (remaining === 0) release();
+      else releaseTimer = setTimeout(release, remaining);
+    }
+
+    function onCancel(event) {
+      if (!downSent || (event && event.pointerId !== undefined &&
+          activePointer !== null && event.pointerId !== activePointer)) return;
+      release();
+      activePointer = null;
+    }
+
+    window.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("pointermove", onMove, true);
+    window.addEventListener("pointerup", onUp, true);
+    window.addEventListener("pointercancel", onCancel, true);
+    window.addEventListener("blur", onCancel);
+    releaseMouseInput = () => {
+      onCancel();
+      window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("pointermove", onMove, true);
+      window.removeEventListener("pointerup", onUp, true);
+      window.removeEventListener("pointercancel", onCancel, true);
+      window.removeEventListener("blur", onCancel);
+    };
+  }
+
+  function toggleMouseLock() {
+    if (!player || !commandInterface || typeof player.setMouseCapture !== "function") return;
+    resetMouse("switching pointer mode");
+    mouseLocked = !mouseLocked;
+    player.setMouseCapture(mouseLocked);
+    if (!mouseLocked && document.pointerLockElement) {
+      void document.exitPointerLock();
+    }
+    ui.mouseLockBtn.textContent = mouseLocked ? "Use pointer" : "Capture mouse";
+    if (!mouseLocked) scheduleMouseReset("pointer mode restored");
+    log("Mouse mode", mouseLocked ? "captured; click the emulator to lock, Escape to release"
+                                   : "host pointer");
   }
 
   async function boot() {
@@ -297,7 +497,7 @@ ${START_COMMAND}
         imageRendering: "pixelated",
         renderBackend: "webgl",
         fsChanges: { local: false },
-        onEvent: (event) => {
+        onEvent: (event, arg) => {
           log(`js-dos event: ${event}`);
 
           if (event === "emu-ready") {
@@ -306,9 +506,17 @@ ${START_COMMAND}
           }
 
           if (event === "ci-ready") {
+            commandInterface = arg || null;
             booting = false;
+            watchVideoMode();
+            installDirectMouseInput();
             setControls(true);
+            scheduleMouseReset("emulator ready");
             ui.container.focus?.();
+          }
+
+          if (event === "fullscreen-change") {
+            scheduleMouseReset("fullscreen changed");
           }
         },
       });
@@ -369,10 +577,13 @@ ${START_COMMAND}
   ui.restartBtn.addEventListener("click", restart);
   ui.pauseBtn.addEventListener("click", togglePause);
   ui.fullscreenBtn.addEventListener("click", enterFullscreen);
+  ui.resetMouseBtn.addEventListener("click", () => resetMouse());
+  ui.mouseLockBtn.addEventListener("click", toggleMouseLock);
   ui.stopBtn.addEventListener("click", () => stopPlayer());
   ui.diagnosticsBtn.addEventListener("click", toggleDiagnostics);
   ui.runDiagnosticsBtn.addEventListener("click", runDiagnostics);
   ui.clearLogBtn.addEventListener("click", () => { ui.log.textContent = ""; });
+  document.addEventListener("fullscreenchange", () => scheduleMouseReset("browser fullscreen changed"));
 
   window.addEventListener("error", (event) => {
     log("Window error", event.message || String(event.error || event));
