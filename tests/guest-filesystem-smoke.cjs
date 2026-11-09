@@ -34,7 +34,7 @@ try {
  });
  assert.equal(result.projectCount,1,"Mixed-case Projects directory must not be duplicated");
  assert(result.filenames.includes("HELLO.C"));
- assert(result.filenames.includes("SHOWCASE.CPP"));
+ assert(result.filenames.includes("GRAPHICS.H"));
  assert.equal(result.helloSize,result.helloTwice,"Guest reads must be repeatable");
 
  await p.locator("#downloadBtn").click();
@@ -46,10 +46,10 @@ try {
  await p.waitForTimeout(1900);
  const objs=await p.evaluate(async()=>{
    const t=await window.__ci.fsTree(),turbo=t.nodes.find(x=>x.name==="TURBOC3"),source=turbo.nodes.find(x=>x.name==="SOURCE");
-   return source?.nodes.filter(x=>/SHOWCASE\.(OBJ|EXE)/i.test(x.name)).map(x=>x.name)||[];
+   return source?.nodes.filter(x=>/GRAPHICS\.(OBJ|EXE)/i.test(x.name)).map(x=>x.name)||[];
  });
- assert(objs.includes("SHOWCASE.OBJ")&&objs.includes("SHOWCASE.EXE"),
-   "F9 must compile and link the C++ SHOWCASE.CPP into OBJ and EXE");
+ assert(objs.includes("GRAPHICS.OBJ")&&objs.includes("GRAPHICS.EXE"),
+   "F9 must compile and link GRAPHICS.H into OBJ and EXE");
  console.log("PASS: single canonical Projects directory, repeatable file reads, explicit save and F9 OBJ/EXE build");
 } finally {await b.close();}
 })().catch(e=>{console.error(e.stack);process.exitCode=1});

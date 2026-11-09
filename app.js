@@ -1,10 +1,10 @@
 (() => {
   "use strict";
 
-  const SOURCE_ARCHIVE_URL = "Turboc3.zip?v=cpp-demo-1";
+  const SOURCE_ARCHIVE_URL = "Turboc3.zip?v=graphics-h-demo-1";
   const EMULATORS_PATH_PREFIX =
     "https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/emulators/";
-  const SHOWCASE_PATH = "TURBOC3/Projects/SHOWCASE.CPP";
+  const GRAPHICS_DEMO_PATH = "TURBOC3/Projects/GRAPHICS.H";
   const REQUIRED_RUNTIME_FILES = [
     "TURBOC3/BIN/TC.EXE",
     "TURBOC3/BIN/TCC.EXE",
@@ -12,22 +12,22 @@
     "TURBOC3/INCLUDE/GRAPHICS.H",
     "TURBOC3/LIB/GRAPHICS.LIB",
     "TURBOC3/BGI/EGAVGA.BGI",
-    SHOWCASE_PATH,
+    GRAPHICS_DEMO_PATH,
   ];
 
   const BGI_SELF_TEST = new URLSearchParams(location.search).has("bgi-test");
   const START_COMMAND = BGI_SELF_TEST
     ? `set PATH=C:\\TURBOC3\\BIN
 cd \\TURBOC3\\PROJECTS
-TCC.EXE -IC:\\TURBOC3\\INCLUDE -LC:\\TURBOC3\\LIB SHOWCASE.CPP C:\\TURBOC3\\LIB\\GRAPHICS.LIB
+TCC.EXE -IC:\\TURBOC3\\INCLUDE -LC:\\TURBOC3\\LIB GRAPHICS.H C:\\TURBOC3\\LIB\\GRAPHICS.LIB
 if errorlevel 1 goto compile_failed
-SHOWCASE.EXE
+GRAPHICS.EXE
 goto self_test_done
 :compile_failed
 echo BGI_SELF_TEST_COMPILE_FAILED
 :self_test_done`
     : `cd \\TURBOC3\\BIN
-TC.EXE C:\\TURBOC3\\PROJECTS\\SHOWCASE.CPP`;
+TC.EXE C:\\TURBOC3\\PROJECTS\\GRAPHICS.H`;
 
   const DOSBOX_CONF = `[sdl]
 fullscreen=false
@@ -311,7 +311,7 @@ ${START_COMMAND}
     $("modeDos").setAttribute("aria-pressed",String(isDos));
     $("dosQuickBar").hidden=!isDos;
     $("dosHelp").hidden=!isDos;
-    $("windowTitle").textContent=isDos?"DOSBOX — C:\\>":"TURBOC3 — NONAME00.CPP";
+    $("windowTitle").textContent=isDos?"DOSBOX — C:\\>":"TURBOC3 — GRAPHICS.H";
     $("stepLaunch").textContent=isDos?"03 · Opening DOS prompt":"03 · Launching Turbo C";
     $("loadingRoot").textContent=isDos?"C:\\>":"C:\\TURBOC3>";
     $("errorTitle").textContent=isDos?"Could not start Full DOS":"Could not start Turbo C";

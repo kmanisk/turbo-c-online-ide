@@ -465,7 +465,7 @@ input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
   margin: 0; font-size: 0 !important; line-height: 0; color: transparent;
 }
 .window-caption::after {
-  content: "SHOWCASE.CPP"; font: 12px/1.4 var(--mono);
+  content: "GRAPHICS.H"; font: 12px/1.4 var(--mono);
   color: var(--muted); white-space: nowrap;
 }
 .app[data-mode="dos"] .window-caption::after { content: "C:\\>"; }

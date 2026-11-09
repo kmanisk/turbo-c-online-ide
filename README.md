@@ -8,7 +8,7 @@ Run **Turbo C / Turbo C++ 3.0** in your browser with classic Borland **graphics.
 
 ## Features
 
-- **Turbo C++ IDE:** Edit, compile, and run legacy C/C++ programs, including the built-in `SHOWCASE.CPP` graphics demo.
+- **Turbo C++ IDE:** Edit, compile, and run legacy C/C++ programs, including the built-in `GRAPHICS.H` graphics demo.
 - **Full DOS mode:** Use a DOS prompt, run your own DOS software, manage files, and mount floppy/CD images.
 - **graphics.h / BGI:** Includes Borland graphics libraries and drivers for classic computer-graphics programs.
 - **Local workspace:** Import C/C++ files and ZIP archives, save in your browser, and export files or a ZIP backup.
@@ -17,8 +17,8 @@ Run **Turbo C / Turbo C++ 3.0** in your browser with classic Borland **graphics.
 
 ## Getting started
 
-1. Open the website. **Turbo C++ 3.0 launches automatically** with SHOWCASE.CPP already open.
-2. The only included demo, SHOWCASE.CPP, uses **graphics.h / BGI**. Select **Run > Run** or press **Ctrl+F9**.
+1. Open the website. **Turbo C++ 3.0 launches automatically** with GRAPHICS.H already open.
+2. The only included demo, `GRAPHICS.H`, uses **graphics.h / BGI**. Select **Run > Run** or press **Ctrl+F9**. It is separate from Borland’s actual `INCLUDE/GRAPHICS.H` and uses Turbo C syntax so it compiles as a `.H` file.
 3. Use **F2** to save, **Alt+F9** to compile, **Ctrl+F9** to run, and **Alt+F5** for output. Switch to **Full DOS** in the header.
 4. Use **Download** to export files; **More** includes scaling and mouse repair. After **Stop**, select **Restart**.
 

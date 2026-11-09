@@ -33,7 +33,7 @@ async function main(){
  `}));
  await page.route("**/fflate@0.8.2/umd/index.js",r=>r.fulfill({contentType:"text/javascript",body:`
  window.fflate={
-  unzip(data,cb){const files=["TURBOC3/BIN/TC.EXE","TURBOC3/BIN/TCC.EXE","TURBOC3/BIN/TLINK.EXE","TURBOC3/INCLUDE/GRAPHICS.H","TURBOC3/LIB/GRAPHICS.LIB","TURBOC3/BGI/EGAVGA.BGI","TURBOC3/Projects/SHOWCASE.CPP"];cb(null,Object.fromEntries(files.map(k=>[k,new Uint8Array([1,2,3])])));},
+  unzip(data,cb){const files=["TURBOC3/BIN/TC.EXE","TURBOC3/BIN/TCC.EXE","TURBOC3/BIN/TLINK.EXE","TURBOC3/INCLUDE/GRAPHICS.H","TURBOC3/LIB/GRAPHICS.LIB","TURBOC3/BGI/EGAVGA.BGI","TURBOC3/Projects/GRAPHICS.H"];cb(null,Object.fromEntries(files.map(k=>[k,new Uint8Array([1,2,3])])));},
   zipSync(){return new Uint8Array([80,75,3,4]);}
  };
  `}));

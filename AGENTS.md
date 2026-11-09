@@ -2,7 +2,7 @@
 
 - Static browser application: HTML, CSS, JavaScript, js-dos 8.5.3, and a legacy Turbo C3 runtime.
 - Preserve clean-session behavior, classic Turbo C IDE usability, and `graphics.h`/BGI compatibility.
-- Keep `examples/SHOWCASE.CPP`, the bundled `TURBOC3/Projects/SHOWCASE.CPP` inside `Turboc3.zip`, app startup commands, auto-launch flow, and tests synchronized.
+- Keep `examples/GRAPHICS.H`, the bundled `TURBOC3/Projects/GRAPHICS.H` inside `Turboc3.zip`, app startup commands, auto-launch flow, and tests synchronized.
 - Keep js-dos and fflate versions pinned unless the task explicitly requires updating them.
 - Read `README.md` and inspect `git status --short` before changes.
 - Run `node --check app.js`, `git diff --check`, and existing relevant tests.
@@ -19,4 +19,5 @@
 - Validate archive central-directory size limits before asynchronous decompression and reject unsafe paths.
 - The bundled Turbo C components are third-party legacy software; review redistribution permissions before public release.
 - Do not commit, push, publish, or deploy unless explicitly requested.
-- The sole included example is SHOWCASE.CPP using graphics.h. Auto-launch selected mode; keep Restart usable after Stop. No Start button or sample chooser.
+- The sole included example is GRAPHICS.H using graphics.h. Auto-launch selected mode; keep Restart usable after Stop. No Start button or sample chooser.
+- The project demo is TURBOC3/Projects/GRAPHICS.H, distinct from TURBOC3/INCLUDE/GRAPHICS.H. Keep demo valid Turbo C syntax (.H is parsed as C), F9 and Ctrl+F9 working, and never alter the Borland include header.
