@@ -47,7 +47,7 @@ ${START_COMMAND}
   const $ = (id) => document.getElementById(id);
   const ui = {
     app: $("app"), container: $("dos-container"), screenArea: $("screenArea"), viewport: $("monitorViewport"), monitor: $("monitor"),
-    startBtn: $("startBtn"), restartBtn: $("restartBtn"), restartLabel: $("restartLabel"),
+    restartBtn: $("restartBtn"), restartLabel: $("restartLabel"),
     pauseBtn: $("pauseBtn"), pauseLabel: $("pauseLabel"), resumeBtn: $("resumeBtn"), stopBtn: $("stopBtn"),
     fullscreenBtn: $("fullscreenBtn"), headerFullscreenBtn: $("headerFullscreenBtn"), scaleBtn: $("scaleBtn"),
     scaleButtonLabel: $("scaleButtonLabel"), scaleLabel: $("scaleLabel"),
@@ -57,7 +57,7 @@ ${START_COMMAND}
     uploadBtn: $("uploadBtn"), drawerUploadBtn: $("drawerUploadBtn"), downloadBtn: $("downloadBtn"), fileInput: $("fileInput"),
     fileList: $("fileList"), refreshFilesBtn: $("refreshFilesBtn"), downloadSelectedBtn: $("downloadSelectedBtn"),
     downloadZipBtn: $("downloadZipBtn"), saveWorkspaceBtn: $("saveWorkspaceBtn"), resetWorkspaceBtn: $("resetWorkspaceBtn"),
-    idleSampleSelect: $("idleSampleSelect"), drawerSampleSelect: $("drawerSampleSelect"), savedIndicator: $("savedIndicator"),
+    savedIndicator: $("savedIndicator"),
     fileSavedBadge: $("fileSavedBadge"), workspaceStorageLabel: $("workspaceStorageLabel"),
     runDiagnosticsBtn: $("runDiagnosticsBtn"), checks: $("checks"), log: $("log"), clearLogBtn: $("clearLogBtn"), copyLogBtn: $("copyLogBtn"),
     idleOverlay: $("idleOverlay"), loadingOverlay: $("loadingOverlay"), pausedOverlay: $("pausedOverlay"), errorOverlay: $("errorOverlay"),
@@ -135,7 +135,7 @@ ${START_COMMAND}
     ui.pausedOverlay.hidden = state !== "paused";
     ui.errorOverlay.hidden = state !== "error";
     ui.stateLabel.textContent = message || ({idle:"Stopped",loading:"Loading",running:selectedMode==="dos"?"Running":"Running",paused:"Paused",error:"Error"}[state]);
-    ui.restartBtn.disabled = !["running", "paused"].includes(state);
+    ui.restartBtn.disabled = state === "loading"; // Recovery after Stop without a Start screen.
     ui.pauseBtn.disabled = !["running", "paused"].includes(state);
     ui.stopBtn.disabled = !["running", "paused"].includes(state);
     ui.uploadBtn.disabled = state === "loading";
@@ -311,15 +311,6 @@ ${START_COMMAND}
     $("modeDos").setAttribute("aria-pressed",String(isDos));
     $("dosQuickBar").hidden=!isDos;
     $("dosHelp").hidden=!isDos;
-    $("dosModeNote").hidden=!isDos;
-    $("idleSampleSelect").closest("label").hidden=isDos;
-    $("idleOverline").textContent=isDos?"Full DOS":"Turbo C";
-    $("idleTitle").textContent=isDos?"A DOS prompt in your browser":"Turbo C++ 3.0 in your browser";
-    $("idleDescription").textContent=isDos?
-      "Run your own DOS programs and manage files stored in this browser.":
-      "Runs in DOSBox through WebAssembly. Files are saved in this browser.";
-    $("startLabel").textContent=isDos?"Start":"Start";
-    $("idleHint").textContent=isDos?"After it starts, click the screen to use the DOS prompt.":"After it starts, click the screen to use the keyboard.";
     $("windowTitle").textContent=isDos?"DOSBOX — C:\\>":"TURBOC3 — NONAME00.CPP";
     $("stepLaunch").textContent=isDos?"03 · Opening DOS prompt":"03 · Launching Turbo C";
     $("loadingRoot").textContent=isDos?"C:\\>":"C:\\TURBOC3>";
@@ -605,29 +596,92 @@ ${START_COMMAND}
       return alive && !mouseLocked && player && commandInterface === ci;
     }
 
-    // Turbo C/DOSBox can keep showing the host cursor but lose guest mouse
-    // clicks after a compiler child exits. A selected IDE menu becomes green;
-    // use one bounded screenshot before/after a top-menu click to distinguish
-    // a successful click from the legacy guest mouse-driver failure.
-    async function menuHighlighted(x) {
-      if (selectedMode !== "turbo" || typeof ci.screenshot !== "function") return null;
-      try {
-        const image = await ci.screenshot();
-        if (image?.width !== 640 || image?.height !== 400 || !image.data) return null;
-        let green = 0;
-        for (const y of [0.01, 0.018, 0.027, 0.036]) {
-          for (let offset = -0.02; offset <= 0.0201; offset += 0.005) {
-            const px = Math.min(image.width - 1, Math.max(0, Math.floor((x + offset) * image.width)));
-            const py = Math.floor(y * image.height);
-            const i = 4 * (py * image.width + px);
-            const r = image.data[i], g = image.data[i + 1], b = image.data[i + 2];
-            if (g > 85 && r < 85 && b < 85) green++;
-          }
+    // Normal DOS mouse clicks must never wait for screenshots or guest
+    // recovery. A previously broken mouse driver can ignore an entire click,
+    // so verify only top-menu interactions off the input queue.
+    //
+    // An active Turbo C menu changes a large part of the upper DOS screen.
+    // Checking a single green menu highlight was unreliable (e.g. Run->File,
+    // system menu, Help dialogs) and repeatedly repainted the whole desktop.
+    let clickSequence = 0;
+    let checkingRecovery = false;
+
+    function looksLikeIdeMenu(image) {
+      if (selectedMode !== "turbo" || !image?.data ||
+          image.width !== 640 || image.height !== 400) return false;
+      // DOS graphics programs do not have Turbo C's broad light-gray menu bar.
+      let neutral = 0;
+      for (let x = 20; x < 620; x += 20) {
+        const i = 4 * (9 * image.width + x);
+        const r = image.data[i], g = image.data[i + 1], b = image.data[i + 2];
+        if (r >= 130 && r <= 200 &&
+            Math.abs(r - g) < 12 && Math.abs(g - b) < 12) neutral++;
+      }
+      return neutral >= 10;
+    }
+
+    function menuFrameChanged(before, after) {
+      if (!before?.data || !after?.data ||
+          before.width !== after.width || before.height !== after.height) return null;
+      // Ignore the header hover highlight and mouse cursor; only compare
+      // the large popup/dialog area. This also detects menus other than File.
+      let changed = 0;
+      for (let y = 22; y < 215; y += 4) {
+        for (let x = 8; x < 632; x += 4) {
+          const i = 4 * (y * before.width + x);
+          const delta = Math.abs(before.data[i] - after.data[i]) +
+            Math.abs(before.data[i + 1] - after.data[i + 1]) +
+            Math.abs(before.data[i + 2] - after.data[i + 2]);
+          if (delta > 55 && ++changed >= 48) return true;
         }
-        return green >= 3;
-      } catch (error) {
-        log("Mouse menu verification skipped", error?.message || String(error));
-        return null;
+      }
+      return false;
+    }
+
+    async function verifyMenuClick(action, before, sequence) {
+      if (!before || !looksLikeIdeMenu(before) || checkingRecovery) return;
+      const stillCurrent = () => available() && !active &&
+        sequence === clickSequence && selectedMode === "turbo";
+      const changed = async () => {
+        if (!stillCurrent()) return null;
+        try {
+          return menuFrameChanged(before, await ci.screenshot());
+        } catch (error) {
+          log("Mouse menu verification unavailable", error?.message || String(error));
+          return null;
+        }
+      };
+      await wait(120);
+      let result = await changed();
+      if (result !== false) return;
+      // A slow DOS redraw is not a lost click. Give Turbo C a second frame
+      // and abort immediately when a newer pointer interaction starts.
+      await wait(120);
+      result = await changed();
+      if (result !== false || !stillCurrent()) return;
+      checkingRecovery = true;
+      try {
+        log("Turbo C ignored menu click; repainting and retrying once");
+        await repairMouse();
+        if (!stillCurrent()) return;
+        ci.sendMouseMotion(action.start.x, action.start.y);
+        ci.sendMouseButton(action.button, true);
+        await wait(MIN_PRESS_MS);
+        if (!available()) return;
+        ci.sendMouseButton(action.button, false);
+        ci.sendMouseSync?.();
+        clickDiagnostics.downs++;
+        clickDiagnostics.ups++;
+        await wait(100);
+        const recovered = await changed();
+        if (recovered === true) {
+          log("Turbo C menu recovered automatically");
+        } else if (recovered === false) {
+          log("Menu did not respond after automatic mouse recovery");
+          announce("Use Repair mouse in More if Turbo C still ignores clicks.");
+        }
+      } finally {
+        checkingRecovery = false;
       }
     }
 
@@ -637,7 +691,13 @@ ${START_COMMAND}
       const isMenuClick = selectedMode === "turbo" &&
         button === 0 && action.start.y > 0 && action.start.y < 0.048 &&
         action.start.x > 0.028 && action.start.x < 0.99;
-      const menuWasOpen = isMenuClick ? await menuHighlighted(action.start.x) : null;
+      // The pre-click frame is optional. A screenshot error must never block
+      // input, and normal clicks are sent as soon as the small read completes.
+      let before = null;
+      if (isMenuClick && !checkingRecovery && typeof ci.screenshot === "function") {
+        try { before = await ci.screenshot(); }
+        catch (error) { log("Mouse screenshot unavailable", error?.message || String(error)); }
+      }
       let pressed = false;
       let timeout = null;
       try {
@@ -660,31 +720,11 @@ ${START_COMMAND}
         pressed = false;
         clickDiagnostics.ups++;
         ci.sendMouseSync?.();
-
-        // Do not repaint every time the IDE is used. Only recover when a
-        // click on a previously CLOSED top menu did not highlight that menu.
-        // A second click on an already-open menu intentionally closes it.
-        if (isMenuClick && menuWasOpen === false && available()) {
-          await wait(165);
-          const menuDidOpen = await menuHighlighted(action.start.x);
-          if (menuDidOpen === false && available()) {
-            log("Turbo C ignored menu click; repainting and retrying once");
-            await repairMouse();
-            if (available()) {
-              ci.sendMouseMotion(action.start.x, action.start.y);
-              ci.sendMouseButton(button, true);
-              await wait(MIN_PRESS_MS);
-              ci.sendMouseButton(button, false);
-              ci.sendMouseSync?.();
-              await wait(130);
-              if (await menuHighlighted(action.start.x) !== true) {
-                log("Menu did not open after automatic mouse recovery");
-                announce("Mouse recovery attempted. Use Repair mouse if the IDE still ignores clicks.");
-              } else {
-                log("Turbo C menu recovered automatically");
-              }
-            }
-          }
+        // One-shot recovery runs independently of the click queue. Opening
+        // another menu no longer waits for screenshots, repaint or retry.
+        if (isMenuClick && before && !checkingRecovery) {
+          void verifyMenuClick(action, before, action.sequence)
+            .catch(error => log("Mouse recovery check failed", error?.message || String(error)));
         }
       } finally {
         if (timeout !== null) clearTimeout(timeout);
@@ -706,7 +746,7 @@ ${START_COMMAND}
       const action = {
         pointerId: event.pointerId,
         button: event.button === 2 ? 1 : 0,
-        start: xy, end: xy, done: false, finish: null, finished: null
+        start: xy, end: xy, sequence: ++clickSequence, finish: null, finished: null
       };
       action.finished = new Promise(resolve => { action.finish = resolve; });
       active = action;
@@ -968,7 +1008,7 @@ ${START_COMMAND}
         log("Live file import deferred",e.message);
         announce(clean+" saved. Restart the emulator to make it available.");
       }
-    } else announce(clean+" saved. Start Turbo C to use it.");
+    } else announce(clean+" saved. Use Restart to launch Turbo C.");
     await refreshFiles();
     return clean;
   }
@@ -981,31 +1021,6 @@ ${START_COMMAND}
       } catch(e) { log("Upload failed",e.message); announce("Upload failed: "+e.message); }
     }
     ui.fileInput.value="";
-  }
-  const SAMPLES = {
-    hello: ["HELLO.C", "#include <stdio.h>\r\nint main(void) {\r\n    printf(\"Hello, Turbo C!\\n\");\r\n    return 0;\r\n}\r\n"],
-    loops: ["LOOPS.C", "#include <stdio.h>\r\nint main(void) {\r\n    int i, sum = 0;\r\n    for(i=1; i<=10; i++) { sum+=i; printf(\"%d \", i); }\r\n    printf(\"\\nSum = %d\\n\", sum);\r\n    return 0;\r\n}\r\n"],
-    arrays: ["ARRAYS.C", "#include <stdio.h>\r\nint main(void) {\r\n    int a[5] = {4, 9, 2, 6, 1};\r\n    int i, largest = a[0];\r\n    for(i=1; i<5; i++) if(a[i]>largest) largest=a[i];\r\n    printf(\"Largest: %d\\n\", largest);\r\n    return 0;\r\n}\r\n"],
-    structs: ["STRUCTS.C", "#include <stdio.h>\r\nstruct Student { char name[20]; int marks; };\r\nint main(void) {\r\n    struct Student s = {\"Ada\", 96};\r\n    printf(\"%s scored %d\\n\", s.name, s.marks);\r\n    return 0;\r\n}\r\n"],
-    files: ["FILEIO.C", "#include <stdio.h>\r\nint main(void) {\r\n    FILE *fp = fopen(\"C:\\\\TURBOC3\\\\PROJECTS\\\\RESULT.TXT\", \"w\");\r\n    if(!fp) { printf(\"File error\\n\"); return 1; }\r\n    fputs(\"Saved from Turbo C!\\n\", fp);\r\n    fclose(fp);\r\n    printf(\"Wrote RESULT.TXT\\n\");\r\n    return 0;\r\n}\r\n"]
-  };
-  async function insertSample(key) {
-    if(!key) return;
-    try {
-      let name,bytes;
-      if (key==="graphics") {
-        const response=await fetch("examples/SHOWCASE.CPP",{cache:"force-cache"});
-        if (!response.ok) throw new Error("Could not fetch BGI sample");
-        name="BGIDEMO.CPP"; bytes=new Uint8Array(await response.arrayBuffer());
-      } else {
-        const entry=SAMPLES[key];
-        if(!entry) return;
-        name=entry[0];bytes=new TextEncoder().encode(entry[1]);
-      }
-      const dest=await stageFile(name,bytes);
-      announce("Added sample "+dest+". Open it in Turbo C with F3.");
-    } catch(e) { log("Sample import failed",e.message);announce("Sample unavailable: "+e.message); }
-    ui.idleSampleSelect.value="";ui.drawerSampleSelect.value="";
   }
   async function downloadSingle(name) {
     const data=await readGuestFile(name) || savedFiles.get(name);
@@ -1238,7 +1253,6 @@ ${START_COMMAND}
     log("Mouse mode",mouseLocked?"Relative capture":"Direct pointer");
   }
   function installHandlers() {
-    ui.startBtn.addEventListener("click",()=>void boot());
     ui.retryBtn.addEventListener("click",()=>void boot());
     ui.restartBtn.addEventListener("click",()=>askConfirm(ui.restartBtn,"Restart Turbo C?","Unsaved work in the emulator will be lost. Saved browser source files are kept.",()=>restart()));
     ui.pauseBtn.addEventListener("click",togglePause);
@@ -1277,8 +1291,6 @@ ${START_COMMAND}
     ui.uploadBtn.addEventListener("click",()=>selectedMode==="dos"?advanced?.ui.advancedInput.click():ui.fileInput.click());
     ui.drawerUploadBtn.addEventListener("click",()=>ui.fileInput.click());
     ui.fileInput.addEventListener("change",()=>void uploadFiles(ui.fileInput.files));
-    ui.idleSampleSelect.addEventListener("change",()=>void insertSample(ui.idleSampleSelect.value));
-    ui.drawerSampleSelect.addEventListener("change",()=>void insertSample(ui.drawerSampleSelect.value));
     ui.saveWorkspaceBtn.addEventListener("click",()=>void saveWorkspace());
     ui.resetWorkspaceBtn.addEventListener("click",()=>askConfirm(ui.resetWorkspaceBtn,"Reset saved files?","Permanently delete source files stored in this browser? The current DOS session is not changed until restart.",()=>resetSavedWorkspace()));
     ui.refreshFilesBtn.addEventListener("click",()=>void refreshFiles());
@@ -1345,7 +1357,7 @@ ${START_COMMAND}
     ui.crtOverlay.hidden=!ui.crtToggle.checked;
     ui.app.dataset.state="idle";
     installHandlers();
-    setState("idle");
+    setState("loading"); // Keep loading screen during automatic launch.
     layoutScreen();
     log("Turbo C Online IDE initialized");
     if(selectedMode==="dos") {
@@ -1354,9 +1366,8 @@ ${START_COMMAND}
     updateModeUI();
     await loadSavedFiles();
     await refreshFiles();
-    let resume=false;
-    try { resume=sessionStorage.getItem("turboc:boot-after-reload")==="1";sessionStorage.removeItem("turboc:boot-after-reload"); } catch {}
-    if (BGI_SELF_TEST || resume) void boot();
+    try { sessionStorage.removeItem("turboc:boot-after-reload"); } catch {}
+    void boot(); // No Start screen or sample chooser.
   }
   void initialize();
 })();

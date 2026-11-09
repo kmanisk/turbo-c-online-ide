@@ -22,11 +22,14 @@ async function main() {
     await page.goto(process.env.TURBOC_TEST_URL || "http://127.0.0.1:8769/");
     assert.equal(await page.locator("#app").getAttribute("data-mode"),"turbo");
     assert(!requests.some(url=>url.includes("/advanced.js")),
-      "Turbo C must not load advanced mode on idle");
+      "Turbo C must not load advanced mode by default");
+    await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running",{timeout:30000});
+    const modeNav=page.waitForEvent("framenavigated",{timeout:15000});
     await page.locator("#modeDos").click();
-    await page.waitForFunction(()=>document.getElementById("app").dataset.mode==="dos",{timeout:10000});
+    await page.locator("#acceptConfirmBtn").click();
+    await modeNav;
+    await page.waitForFunction(()=>document.getElementById("app").dataset.mode==="dos",{timeout:15000});
     assert.equal(await page.locator("#app").getAttribute("data-mode"),"dos");
-    await page.locator("#startBtn").click();
     await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running",
       {timeout:30000});
     assert.equal(await page.locator("#stateLabel").textContent(),"Running");

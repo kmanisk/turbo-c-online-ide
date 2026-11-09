@@ -7,8 +7,8 @@
   <meta name="description" content="Turbo C Online IDE: run Turbo C/C++ 3.0 and Borland graphics.h BGI programs in your browser with a fast, keyboard-friendly development environment.">
   <title>Turbo C3 Web Lab</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=declutter-1">
-  <script src="app.js?v=neutral-ui-1" defer></script>
+  <link rel="stylesheet" href="styles.css?v=auto-launch-1">
+  <script src="app.js?v=auto-launch-1" defer></script>
 </head>
 <body data-theme="dark">
   <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -33,7 +33,7 @@
     <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></symbol>
   </svg>
 
-  <div class="app" id="app" data-state="idle">
+  <div class="app" id="app" data-state="loading">
     <header class="app-header">
       <div class="brand">
         <img src="favicon.svg" class="brand-icon" alt="" width="36" height="36">
@@ -62,25 +62,11 @@
             <div id="dos-container" tabindex="-1" aria-label="DOS emulator. Click to use the keyboard."></div>
           </div>
 
-          <div class="overlay idle-overlay" id="idleOverlay">
-            <img class="idle-preview" src="assets/idle-preview.png" alt="" aria-hidden="true">
-            <div class="idle-content">
-              <div class="idle-overline sr-only" id="idleOverline">Turbo C</div>
-              <h2 id="idleTitle">Turbo C++ 3.0</h2>
-              <p id="idleDescription">Runs in DOSBox through WebAssembly. Files are saved in this browser.</p>
-              <button class="primary-button" id="startBtn" type="button"><span id="startLabel">Start</span></button>
-              <p class="idle-hint" id="idleHint">Click the screen after it starts to type.</p><p id="dosModeNote" class="dos-mode-note sr-only" hidden>This is DOSBox, not original MS-DOS. Bring your own software.</p>
-              <label class="sample-inline" for="idleSampleSelect">Load a sample program
-                <select id="idleSampleSelect" aria-label="Choose a sample program">
-                  <option value="">Choose sample…</option>
-                  <option value="hello">Hello World</option><option value="loops">Loops</option><option value="arrays">Arrays</option>
-                  <option value="structs">Structs</option><option value="files">File I/O</option><option value="graphics">BGI Graphics</option>
-                </select>
-              </label>
-            </div>
+          <div class="overlay idle-overlay" id="idleOverlay" hidden>
+            <p class="stopped-message">Emulator stopped. Use Restart below to reopen it.</p>
           </div>
 
-          <div class="overlay loading-overlay" id="loadingOverlay" hidden role="status">
+          <div class="overlay loading-overlay" id="loadingOverlay" role="status">
             <div class="loading-content">
               <div class="loading-prompt"><span id="loadingRoot" class="sr-only">C:\TURBOC3&gt;</span> <span id="loadingCommand">Preparing runtime</span></div>
               <h2>Starting DOSBox</h2>
@@ -176,10 +162,9 @@ initgraph(&amp;gd, &amp;gm, "C:\\TURBOC3\\BGI");</pre><p>If you get “Graphics 
       <div class="drawer-section"><div class="workspace-summary"><span id="workspaceStorageLabel">Files saved in this browser</span><span class="saved-indicator" id="fileSavedBadge">Not saved yet</span></div><p class="muted">Files are stored in this browser. In Turbo C press <kbd>F3</kbd> and open <code>..\PROJECTS\YOURFILE.C</code> after clearing the default <code>*.CPP</code> filter. Restart if a hot-uploaded file is not visible. Use <kbd>F2</kbd> before saving locally or downloading.</p>
       <div class="drawer-actions"><button id="drawerUploadBtn" type="button"><svg class="icon"><use href="#i-upload"/></svg> Import file</button><button id="saveWorkspaceBtn" type="button"><svg class="icon"><use href="#i-check"/></svg> Save locally</button></div>
       </div>
-      <div class="drawer-section"><div class="section-line"><h3>Files</h3><button type="button" id="refreshFilesBtn" class="text-button">Refresh</button></div><div id="fileList" class="file-list" role="listbox" aria-label="Project files" tabindex="0"><p class="muted">Start Turbo C to see project files.</p></div>
+      <div class="drawer-section"><div class="section-line"><h3>Files</h3><button type="button" id="refreshFilesBtn" class="text-button">Refresh</button></div><div id="fileList" class="file-list" role="listbox" aria-label="Project files" tabindex="0"><p class="muted">Files appear after Turbo C launches.</p></div>
       <div class="drawer-actions"><button type="button" id="downloadSelectedBtn" disabled>Download selected</button><button type="button" id="downloadZipBtn" disabled>Download ZIP</button></div>
       </div>
-      <div class="drawer-section"><h3>Sample programs</h3><label class="sample-label" for="drawerSampleSelect">Insert a ready-to-use source file</label><select id="drawerSampleSelect"><option value="">Choose sample…</option><option value="hello">Hello World</option><option value="loops">Loops</option><option value="arrays">Arrays</option><option value="structs">Structs</option><option value="files">File I/O</option><option value="graphics">BGI Graphics</option></select></div>
       <div class="drawer-section danger-section"><h3>Storage</h3><p class="muted">Reset clears saved source files in this browser. The running emulator is unchanged until restarted.</p><button id="resetWorkspaceBtn" type="button" class="danger-button">Reset saved workspace</button></div>
     </div>
   </aside>

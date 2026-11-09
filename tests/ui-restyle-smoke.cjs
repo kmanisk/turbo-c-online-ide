@@ -10,21 +10,16 @@ const assert = require("node:assert/strict");
   const errors=[];page.on("pageerror",e=>errors.push(e.message));
   try {
     await page.goto(process.env.TURBOC_TEST_URL || "http://127.0.0.1:8769/",{waitUntil:"domcontentloaded"});
-    // The existing mode handler owns the DOM text; CSS renders its shorter title.
-    assert.equal(await page.locator("#idleTitle").evaluate(el=>getComputedStyle(el,"::after").content),'"Turbo C++ 3.0"');
-    assert(await page.locator(".idle-preview").isVisible());
     assert.equal(await page.title(),"Turbo C3 Web Lab");
+    assert.equal(await page.locator("#startBtn").count(),0);
+    assert.equal(await page.locator("#idleSampleSelect").count(),0);
+    assert.equal(await page.locator("#drawerSampleSelect").count(),0);
+    await page.waitForFunction(()=>document.querySelector("#app").dataset.state==="running",{timeout:30000});
     assert.equal(await page.locator(".toolbar").evaluate(el=>getComputedStyle(el).flexWrap),"nowrap");
     assert.equal(await page.locator("#headerFullscreenBtn").isVisible(),false);
+    assert.equal(await page.locator("#fullscreenBtn").isVisible(),true);
     assert.equal(await page.locator("#stateLabel").evaluate(el=>getComputedStyle(el).position),"absolute");
     assert.equal(await page.locator(".workspace-footer").evaluate(el=>getComputedStyle(el).position),"absolute");
-    assert.equal(await page.locator("#restartBtn").isVisible(),false);
-    assert.equal(await page.locator("#fullscreenBtn").isVisible(),true);
-    await page.locator("#idleSampleSelect").selectOption("loops");
-    await page.waitForTimeout(180);
-    assert.equal(await page.locator("#savedIndicator").textContent(),"Saved in this browser");
-    await page.locator("#startBtn").click();
-    await page.waitForFunction(()=>document.querySelector("#app").dataset.state==="running",{timeout:30000});
     await page.locator("#pauseBtn").click();
     assert.equal(await page.locator("#app").getAttribute("data-state"),"paused");
     await page.locator("#resumeBtn").click();
@@ -79,21 +74,17 @@ const assert = require("node:assert/strict");
     await page.locator("#acceptConfirmBtn").click();
     await page.waitForFunction(()=>document.querySelector("#app").dataset.state==="idle",{timeout:30000});
 
-    // Inspect the Full DOS idle state on a fresh page: the real mode switch
-    // intentionally reloads the disposed emulator and may auto-start.
-    await page.evaluate(()=>{localStorage.setItem("turboc:mode","dos");sessionStorage.removeItem("turboc:boot-after-reload");});
-    await page.goto("http://127.0.0.1:8769/?ui-dos-idle=1",{waitUntil:"domcontentloaded"});
-    await page.waitForFunction(()=>document.querySelector("#app").dataset.mode==="dos" && document.querySelector("#app").dataset.state==="idle" && !document.querySelector("#dosModeNote").hidden,{timeout:30000});
+    assert.equal(await page.locator("#restartBtn").isEnabled(),true);
+    const modeNav=page.waitForEvent("framenavigated",{timeout:15000});
+    await page.locator("#modeDos").click();
+    await modeNav;
+    await page.waitForFunction(()=>document.querySelector("#app").dataset.mode==="dos" &&
+      document.querySelector("#app").dataset.state==="running",{timeout:30000});
     assert.equal(await page.locator("#modeDos").getAttribute("aria-pressed"),"true");
-    assert.equal(await page.locator("#dosModeNote").getAttribute("hidden"),null);
-    assert.equal(await page.locator("#dosModeNote").evaluate(el=>getComputedStyle(el).position),"absolute");
-    assert(await page.locator("#modeDos small").isVisible());
-    await page.locator("#startBtn").click();
-    await page.waitForFunction(()=>document.querySelector("#app").dataset.state==="running",{timeout:30000});
     await page.locator("#dosSettingsBtn").click();
     assert(await page.locator("#settingsDrawer").isVisible());
     await page.locator("#settingsDrawer .close-drawer").click();
     assert.deepEqual(errors,[]);
-    console.log("PASS: Start, Pause/Resume, Stop, Restart, Upload, download files/ZIP, fullscreen, scale, mouse capture, sample dropdown, Turbo C/Full DOS, Help, Diagnostics, theme, DOS settings.");
+    console.log("PASS: auto-launch, Pause/Resume, Stop, Restart, Upload, download files/ZIP, fullscreen, scale, mouse capture, single graphics demo, Turbo C/Full DOS, Help, Diagnostics, theme, DOS settings.");
   } finally {await browser.close()}
 })().catch(e=>{console.error(e.stack);process.exitCode=1});

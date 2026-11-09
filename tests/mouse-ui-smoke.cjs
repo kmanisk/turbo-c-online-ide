@@ -40,13 +40,13 @@ async function main(){
  await page.route("**/Turboc3.zip*",r=>r.fulfill({body:Buffer.from([1,2,3]),contentType:"application/zip"}));
  try{
   await page.goto(process.env.TURBOC_TEST_URL || "http://127.0.0.1:8769/");
-  assert.equal(await page.locator("#app").getAttribute("data-state"),"idle");
-  assert.equal(await page.evaluate(()=>typeof window.Dos),"undefined","js-dos must load after Start");
-  await page.locator("#idleSampleSelect").selectOption("hello");
-  await page.waitForTimeout(160);
-  assert.equal(await page.locator("#savedIndicator").textContent(),"Saved in this browser");
-  await page.locator("#startBtn").click();
-  await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running");
+  assert.equal(await page.locator("#startBtn").count(),0);
+  assert.equal(await page.locator("#idleSampleSelect").count(),0);
+  assert.equal(await page.locator("#drawerSampleSelect").count(),0);
+  await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running",{timeout:30000});
+  await page.setInputFiles("#fileInput",{name:"HELLO.C",mimeType:"text/plain",
+    buffer:Buffer.from("#include <stdio.h>\r\nint main(void){puts(\"Hello\");return 0;}\r\n")});
+  await page.waitForFunction(()=>document.getElementById("savedIndicator").textContent==="Saved in this browser",{timeout:10000});
   assert.equal(await page.evaluate(()=>window.__mock.starts),1);
   await page.waitForTimeout(250); // finish the one-shot ci-ready sync before asserting click sequence
   const canvas=page.locator("#dos-container canvas");
@@ -80,15 +80,16 @@ async function main(){
   await page.locator("#acceptConfirmBtn").click();
   await page.waitForFunction(()=>document.getElementById("app").dataset.state==="idle");
   assert.equal(await page.evaluate(()=>window.__mock.stops),1);
-  await page.reload();await page.waitForTimeout(180);
+  await page.reload();
+  await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running",{timeout:30000});
   await page.locator("#downloadBtn").click();
   assert.match(await page.locator("#fileList").innerText(),/HELLO.C/,"Files must persist through reload");
   await page.locator("#resetWorkspaceBtn").click();
   await page.locator("#cancelConfirmBtn").click();
   assert.match(await page.locator("#fileList").innerText(),/HELLO.C/);
   await page.locator("#filesDrawer .close-drawer").click();
-  await page.locator("#startBtn").click();
-  await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running");
+  assert.equal(await page.locator("#startBtn").count(),0);
+  assert.equal(await page.locator("#app").getAttribute("data-state"),"running");
   await page.locator("#downloadBtn").click();
   await page.locator("#resetWorkspaceBtn").click();
   await page.locator("#acceptConfirmBtn").click();
@@ -98,12 +99,12 @@ async function main(){
   await page.locator("#acceptConfirmBtn").click();
   await page.waitForFunction(()=>document.getElementById("app").dataset.state==="idle");
   await page.reload();
-  await page.waitForTimeout(140);
+  await page.waitForFunction(()=>document.getElementById("app").dataset.state==="running",{timeout:30000});
   await page.locator("#downloadBtn").click();
   assert.doesNotMatch(await page.locator("#fileList").innerText(),/HELLO.C/,
     "Reset during a running DOS session must not auto-resave the cleared files on Stop");
   assert.deepEqual(errors,[]);
-  console.log("PASS: lazy loading, input timing, pause/resume, confirmation, dialogs, themes, scaling, persistence and running-session reset");
+  console.log("PASS: auto-launch, input timing, pause/resume, confirmation, dialogs, themes, scaling, persistence and running-session reset");
  }finally{await browser.close();}
 }
 main().catch(e=>{console.error(e.stack);process.exitCode=1;});

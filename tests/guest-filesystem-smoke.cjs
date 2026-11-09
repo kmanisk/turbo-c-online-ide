@@ -13,15 +13,18 @@ try {
    });
  });
  await p.goto(process.env.TURBOC_TEST_URL||"http://127.0.0.1:8769/");
- await p.locator("#idleSampleSelect").selectOption("hello");
- await p.waitForTimeout(150);
- await p.setInputFiles("#fileInput",{
-   name:"SHOWCASE.CPP",mimeType:"text/plain",
-   buffer:fs.readFileSync(path.resolve(__dirname,"../examples/SHOWCASE.CPP"))
- });
- await p.waitForTimeout(150);
- await p.locator("#startBtn").click();
  await p.waitForFunction(()=>!!window.__ci && document.getElementById("app").dataset.state==="running",{timeout:30000});
+ await p.setInputFiles("#fileInput",{
+   name:"HELLO.C",mimeType:"text/plain",
+   buffer:Buffer.from("#include <stdio.h>\r\nint main(void) { puts(\"Hello\"); return 0; }\r\n")
+ });
+ await p.waitForFunction(async()=>{
+   try {
+     const tree=await window.__ci.fsTree();
+     const turbo=tree.nodes.find(x=>x.name==="TURBOC3");
+     return turbo?.nodes.some(x=>x.name.toUpperCase()==="PROJECTS"&&x.nodes.some(f=>f.name==="HELLO.C"));
+   }catch{return false;}
+ },null,{timeout:8000,polling:200});
  const result=await p.evaluate(async()=>{
    const ci=window.__ci,tree=await ci.fsTree(),turbo=tree.nodes.find(e=>e.name==="TURBOC3");
    const projects=turbo.nodes.filter(e=>e.name.toUpperCase()==="PROJECTS");

@@ -20,8 +20,8 @@ async function main() {
       page.on("pageerror",e=>errors.push(e.message));
       try {
         await page.goto(base,{waitUntil:"domcontentloaded"});
-        assert.equal(await page.locator("#app").getAttribute("data-state"),"idle");
-        await page.locator("#startBtn").click();
+        assert.equal(await page.locator("#startBtn").count(),0);
+
         await page.waitForFunction(()=>document.querySelector("#app").dataset.state==="running",{timeout:30000});
         const result = await page.evaluate(() => {
           const rect = node => {

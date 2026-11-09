@@ -491,8 +491,10 @@ input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
 .quick-controls { gap: 2px; }
 .tool-button:disabled { opacity: .4 !important; }
 .tool-button:disabled:hover { background: transparent; }
-.app[data-state="idle"] .run-controls,
+.app[data-state="idle"] #pauseBtn,
+.app[data-state="idle"] #stopBtn,
 .app[data-state="idle"] .run-divider { display: none !important; }
+.stopped-message { max-width: 32rem; color: var(--text); font: 14px/1.5 var(--font); text-align: center; }
 .toolbar-more { flex: 0 0 auto; margin-left: auto; position: relative; }
 .toolbar-more > summary {
   display: grid; place-items: center;

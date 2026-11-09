@@ -26,7 +26,7 @@ async function main(){
  const url=process.env.TURBOC_TEST_URL || "http://127.0.0.1:8769/";
  try {
    await page.goto(url,{waitUntil:"domcontentloaded"});
-   await page.locator("#startBtn").click();
+
    await page.waitForFunction(()=>!!window.__testCi && document.querySelector("#app").dataset.state==="running",{timeout:30000});
    const clickMenu=async(name)=>{
      const bounds=await page.locator("#dos-container canvas").boundingBox();
